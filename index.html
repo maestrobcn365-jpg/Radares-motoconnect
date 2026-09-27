@@ -2,186 +2,232 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Radar Moto BT - Background Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Radar Moto BT</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden; /* Elimina cualquier barra de desplazamiento */
       background-color: #0d0d0d;
       color: #f0f0f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: space-between;
-      min-height: 100vh;
-      padding: 16px;
+      align-items: center;
+      padding: 10px 14px 14px;
     }
-    header { text-align: center; margin-top: 5px; }
-    h1 { font-size: 1.3rem; color: #ff3b30; letter-spacing: 1px; }
+    header {
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.1rem;
+      color: #ff3b30;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+    .subhead {
+      font-size: 0.72rem;
+      color: #888;
+    }
 
-    /* TARJETA DINÁMICA DE ALERTA */
-    .alert-card {
-      display: none;
+    /* CONTENEDOR CENTRAL FLEXIBLE */
+    .main-content {
       width: 100%;
       max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      justify-content: center;
+      margin: 6px 0;
+    }
+
+    /* TARJETA DE ALERTA DINÁMICA COMPACTA */
+    .alert-card {
+      display: none;
       background: #1f1212;
-      border: 3px solid #ff3b30;
-      border-radius: 18px;
-      padding: 16px;
-      margin: 10px 0;
+      border: 2px solid #ff3b30;
+      border-radius: 14px;
+      padding: 8px 12px;
       text-align: center;
-      box-shadow: 0 0 25px rgba(255, 59, 48, 0.5);
+      box-shadow: 0 0 18px rgba(255, 59, 48, 0.45);
       animation: pulsoAlerta 1.2s infinite alternate;
     }
     @keyframes pulsoAlerta {
-      from { border-color: #ff3b30; transform: scale(1); }
-      to { border-color: #ffffff; transform: scale(1.02); }
+      from { border-color: #ff3b30; }
+      to { border-color: #ffffff; }
     }
 
     .alert-top {
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      margin-bottom: 10px;
+      justify-content: center;
+      gap: 18px;
     }
 
     /* SEÑAL DE TRÁFICO REDONDA OFICIAL */
     .traffic-sign {
-      width: 82px;
-      height: 82px;
+      width: 62px;
+      height: 62px;
       background-color: #ffffff;
-      border: 9px solid #d32f2f;
+      border: 7px solid #d32f2f;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
     .traffic-sign span {
       color: #000000;
-      font-size: 2.1rem;
+      font-size: 1.65rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .radar-icon-box { font-size: 3.2rem; }
+    .radar-icon-box {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+
     .radar-info-title {
-      font-size: 1.2rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: #fff;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin-top: 3px;
     }
     .radar-info-dist {
-      font-size: 1.8rem;
+      font-size: 1.35rem;
       color: #00e676;
       font-weight: 800;
-      margin-top: 4px;
     }
 
-    /* PANEL PRINCIPAL */
+    /* PANEL PRINCIPAL DE INSTRUMENTOS */
     .panel {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 380px;
-      padding: 16px;
+      background: #181818;
+      border: 1px solid #282828;
+      border-radius: 14px;
+      padding: 10px 12px;
       text-align: center;
     }
     .metric-group {
       display: flex;
       justify-content: space-around;
-      margin: 10px 0;
+      margin-bottom: 6px;
     }
-    .metric { display: flex; flex-direction: column; }
-    .metric .val { font-size: 2.4rem; font-weight: 700; color: #00e676; }
-    .metric .lbl { font-size: 0.75rem; color: #aaa; text-transform: uppercase; }
+    .metric {
+      display: flex;
+      flex-direction: column;
+    }
+    .metric .val {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #00e676;
+      line-height: 1.1;
+    }
+    .metric .lbl {
+      font-size: 0.68rem;
+      color: #999;
+      text-transform: uppercase;
+    }
 
     .status-row {
-      font-size: 0.8rem;
+      font-size: 0.74rem;
       color: #888;
-      margin: 4px 0;
+      margin: 2px 0;
       display: flex;
       justify-content: space-between;
     }
+
     .log-box {
-      background: #111;
+      background: #0f0f0f;
       border: 1px solid #222;
-      border-radius: 8px;
-      height: 75px;
-      padding: 8px;
-      font-size: 0.75rem;
+      border-radius: 6px;
+      height: 48px;
+      padding: 5px 8px;
+      font-size: 0.68rem;
       color: #bbb;
       overflow-y: auto;
       text-align: left;
       font-family: monospace;
-      margin-top: 8px;
+      margin-top: 6px;
+      line-height: 1.25;
     }
 
+    /* BOTÓN INFERIOR */
     .btn-action {
       background: #ff3b30;
       color: #fff;
       border: none;
       width: 100%;
       max-width: 380px;
-      padding: 16px;
+      padding: 13px;
       border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: bold;
+      font-size: 1rem;
+      font-weight: 800;
       cursor: pointer;
-      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
     }
-    .btn-action.active { background: #333; color: #888; }
+    .btn-action.active {
+      background: #2b2b2b;
+      color: #999;
+    }
   </style>
 </head>
 <body>
 
   <header>
     <h1>RADAR MOTO BT</h1>
-    <span style="font-size: 0.8rem; color: #888;">Audio BT: X10 / CAR-KIT</span>
+    <div class="subhead">Audio BT: X10 / CAR-KIT</div>
   </header>
 
-  <!-- PANEL DE AVISO VISUAL -->
-  <div class="alert-card" id="radarAlertCard">
-    <div class="alert-top">
-      <div class="radar-icon-box" id="alertIcon">📷</div>
-      <div class="traffic-sign">
-        <span id="alertSpeedSign">--</span>
+  <div class="main-content">
+    <!-- PANEL DE AVISO VISUAL COMPACTO -->
+    <div class="alert-card" id="radarAlertCard">
+      <div class="alert-top">
+        <div class="radar-icon-box" id="alertIcon">📷</div>
+        <div class="traffic-sign">
+          <span id="alertSpeedSign">--</span>
+        </div>
       </div>
-    </div>
-    <div class="radar-info-title" id="alertTypeTitle">RADAR</div>
-    <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
-  </div>
-
-  <!-- PANEL DE INSTRUMENTOS -->
-  <div class="panel">
-    <div class="metric-group">
-      <div class="metric">
-        <span class="val" id="speedDisplay">0</span>
-        <span class="lbl">km/h</span>
-      </div>
-      <div class="metric">
-        <span class="val" id="headingDisplay">--</span>
-        <span class="lbl">Rumbo (°)</span>
-      </div>
-    </div>
-    
-    <div class="status-row">
-      <span>Estado GPS:</span>
-      <span id="gpsStatus" style="color: #ff9100;">En espera</span>
-    </div>
-    <div class="status-row">
-      <span>Segundo Plano:</span>
-      <span id="bgStatus" style="color: #888;">Inactivo</span>
-    </div>
-    <div class="status-row">
-      <span>Base de Radares:</span>
-      <span id="dbStatus" style="color: #00e676;">Cargando Cataluña...</span>
+      <div class="radar-info-title" id="alertTypeTitle">RADAR</div>
+      <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <div class="log-box" id="logBox">> Base integral cargada. Pulsa Activar Sistema.</div>
+    <!-- PANEL DE VELOCIDAD Y ESTADO -->
+    <div class="panel">
+      <div class="metric-group">
+        <div class="metric">
+          <span class="val" id="speedDisplay">0</span>
+          <span class="lbl">km/h</span>
+        </div>
+        <div class="metric">
+          <span class="val" id="headingDisplay">--</span>
+          <span class="lbl">Rumbo (°)</span>
+        </div>
+      </div>
+      
+      <div class="status-row">
+        <span>Estado GPS:</span>
+        <span id="gpsStatus" style="color: #ff9100;">En espera</span>
+      </div>
+      <div class="status-row">
+        <span>Segundo Plano:</span>
+        <span id="bgStatus" style="color: #888;">Inactivo</span>
+      </div>
+      <div class="status-row">
+        <span>Base de Radares:</span>
+        <span id="dbStatus" style="color: #00e676;">Cargando Cataluña...</span>
+      </div>
+
+      <div class="log-box" id="logBox">> Base integral cargada. Pulsa Activar Sistema.</div>
+    </div>
   </div>
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
@@ -486,13 +532,12 @@
       }
     }
 
-    // MOTOR DE AUDIO EN SILENCIO (MANTIENE SEGUNDO PLANO VIVO)
+    // AUDIO INAUDIBLE PARA SEGUNDO PLANO
     function activarAudioSegundoPlano() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
 
-        // Genera un búfer silencioso de 2 segundos que se repite indefinidamente
         const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
         silentNode = audioContext.createBufferSource();
         silentNode.buffer = buffer;
@@ -500,7 +545,6 @@
         silentNode.connect(audioContext.destination);
         silentNode.start();
 
-        // Configuración de MediaSession para notificación en Android
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
             title: "Radar Moto Activo",
@@ -512,9 +556,9 @@
 
         document.getElementById("bgStatus").innerText = "Activo (Audio vivo)";
         document.getElementById("bgStatus").style.color = "#00e676";
-        log("Segundo plano activado con éxito.");
+        log("Segundo plano activado.");
       } catch (e) {
-        log("Segundo plano: audio automático restringido.");
+        log("Audio segundo plano no iniciado.");
       }
     }
 
@@ -572,22 +616,19 @@
 
       const estado = avisosPorVoz[radar.id];
 
-      // Hito 1: Entrada (~300 metros)
       if (dist <= 320 && dist > 180 && !estado.fase300) {
         estado.fase300 = true;
         log(`VOZ: Radar ${radar.tipo} a 300m (${radar.velMax})`);
         locucion(`Atención, radar ${radar.tipo} a trescientos metros, límite ${radar.velMax}`);
       }
-      // Hito 2: Confirmación (~150 metros)
       else if (dist <= 170 && dist > 70 && !estado.fase150) {
         estado.fase150 = true;
         log(`VOZ: A 150 metros`);
         locucion(`A ciento cincuenta metros`);
       }
-      // Hito 3: Rebasado (~45 metros)
       else if (dist <= 45 && !estado.faseFin) {
         estado.faseFin = true;
-        log(`VOZ: Punto de control superado`);
+        log(`VOZ: Superado`);
         locucion(`Punto de control`);
       }
     }
@@ -635,14 +676,10 @@
       const btn = document.getElementById("mainBtn");
 
       if (watchId === null) {
-        // 1. Iniciar audio inaudible en segundo plano
         activarAudioSegundoPlano();
-
-        // 2. Notificación vocal de inicio
-        locucion("Sistema de radares activado. Segundo plano habilitado.");
+        locucion("Sistema activado. Segundo plano habilitado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
-        // 3. Inicio del rastreo GPS de alta precisión
         watchId = navigator.geolocation.watchPosition(
           procesarGPS,
           (err) => { log("Error GPS: " + err.message); },
@@ -651,7 +688,7 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("Rastreo GPS y segundo plano activos.");
+        log("GPS y segundo plano activos.");
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
@@ -669,7 +706,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("dbStatus").innerText = `${baseRadares.length} radares activos`;
-      log(`Cataluña completa: ${baseRadares.length} puntos de control listos.`);
+      log(`Cataluña completa: ${baseRadares.length} puntos cargados.`);
     });
   </script>
 </body>
