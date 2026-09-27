@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Radar Moto BT - Cataluña Integral</title>
+  <title>Radar Moto BT - Background Pro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -171,6 +171,10 @@
     <div class="status-row">
       <span>Estado GPS:</span>
       <span id="gpsStatus" style="color: #ff9100;">En espera</span>
+    </div>
+    <div class="status-row">
+      <span>Segundo Plano:</span>
+      <span id="bgStatus" style="color: #888;">Inactivo</span>
     </div>
     <div class="status-row">
       <span>Base de Radares:</span>
@@ -461,6 +465,8 @@
 
     let watchId = null;
     let wakeLock = null;
+    let audioContext = null;
+    let silentNode = null;
     const avisosPorVoz = {};
     const TOLERANCIA_RUMBO = 45;
 
@@ -478,6 +484,54 @@
         voz.rate = 1.1;
         window.speechSynthesis.speak(voz);
       }
+    }
+
+    // MOTOR DE AUDIO EN SILENCIO (MANTIENE SEGUNDO PLANO VIVO)
+    function activarAudioSegundoPlano() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+
+        // Genera un búfer silencioso de 2 segundos que se repite indefinidamente
+        const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
+        silentNode = audioContext.createBufferSource();
+        silentNode.buffer = buffer;
+        silentNode.loop = true;
+        silentNode.connect(audioContext.destination);
+        silentNode.start();
+
+        // Configuración de MediaSession para notificación en Android
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: "Radar Moto Activo",
+            artist: "Avisos por voz X10 / CAR-KIT",
+            album: "Cataluña Pro"
+          });
+          navigator.mediaSession.playbackState = "playing";
+        }
+
+        document.getElementById("bgStatus").innerText = "Activo (Audio vivo)";
+        document.getElementById("bgStatus").style.color = "#00e676";
+        log("Segundo plano activado con éxito.");
+      } catch (e) {
+        log("Segundo plano: audio automático restringido.");
+      }
+    }
+
+    function desactivarAudioSegundoPlano() {
+      if (silentNode) {
+        try { silentNode.stop(); } catch(e){}
+        silentNode = null;
+      }
+      if (audioContext) {
+        try { audioContext.close(); } catch(e){}
+        audioContext = null;
+      }
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "none";
+      }
+      document.getElementById("bgStatus").innerText = "Inactivo";
+      document.getElementById("bgStatus").style.color = "#888";
     }
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -533,7 +587,7 @@
       // Hito 3: Rebasado (~45 metros)
       else if (dist <= 45 && !estado.faseFin) {
         estado.faseFin = true;
-        log(`VOZ: Punto de control`);
+        log(`VOZ: Punto de control superado`);
         locucion(`Punto de control`);
       }
     }
@@ -581,9 +635,14 @@
       const btn = document.getElementById("mainBtn");
 
       if (watchId === null) {
-        locucion("Sistema de radares activado.");
+        // 1. Iniciar audio inaudible en segundo plano
+        activarAudioSegundoPlano();
+
+        // 2. Notificación vocal de inicio
+        locucion("Sistema de radares activado. Segundo plano habilitado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
+        // 3. Inicio del rastreo GPS de alta precisión
         watchId = navigator.geolocation.watchPosition(
           procesarGPS,
           (err) => { log("Error GPS: " + err.message); },
@@ -592,10 +651,11 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("Rastreo GPS en marcha.");
+        log("Rastreo GPS y segundo plano activos.");
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
+        desactivarAudioSegundoPlano();
         ocultarAlertaVisual();
         document.getElementById("gpsStatus").innerText = "Detenido";
         document.getElementById("gpsStatus").style.color = "#ff9100";
@@ -609,7 +669,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("dbStatus").innerText = `${baseRadares.length} radares activos`;
-      log(`Cataluña completa: ${baseRadares.length} puntos de control cargados.`);
+      log(`Cataluña completa: ${baseRadares.length} puntos de control listos.`);
     });
   </script>
 </body>
