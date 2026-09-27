@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Radar Moto BT - AutoSync</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0d0d0d;
+      color: #f0f0f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    header { text-align: center; margin-top: 10px; }
+    h1 { font-size: 1.5rem; color: #ff3b30; letter-spacing: 1px; }
+    p.sub { font-size: 0.85rem; color: #888; margin-top: 4px; }
+    
+    .panel {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .metric-group {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+    .metric {
+      display: flex;
+      flex-direction: column;
+    }
+    .metric .val {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #00e676;
+    }
+    .metric .lbl {
+      font-size: 0.75rem;
+      color: #aaa;
+      text-transform: uppercase;
+    }
+    .status-row {
+      font-size: 0.8rem;
+      color: #888;
+      margin: 6px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .log-box {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      height: 90px;
+      padding: 10px;
+      font-size: 0.75rem;
+      color: #bbb;
+      overflow-y: auto;
+      text-align: left;
+      font-family: monospace;
+      margin-top: 10px;
+    }
+    .btn-action {
+      background: #ff3b30;
+      color: #fff;
+      border: none;
+      width: 100%;
+      max-width: 400px;
+      padding: 18px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4);
+      margin-bottom: 20px;
+    }
+    .btn-action.active {
+      background: #333;
+      color: #888;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>RADAR MOTO BT</h1>
+    <p class="sub">Dispositivos: X10 / CAR-KIT</p>
+  </header>
+
+  <div class="panel">
+    <div class="metric-group">
+      <div class="metric">
+        <span class="val" id="speedDisplay">0</span>
+        <span class="lbl">km/h</span>
+      </div>
+      <div class="metric">
+        <span class="val" id="headingDisplay">--</span>
+        <span class="lbl">Rumbo (°)</span>
+      </div>
+    </div>
+    
+    <div class="status-row">
+      <span>Estado GPS:</span>
+      <span id="gpsStatus" style="color: #ff9100;">En espera</span>
+    </div>
+    <div class="status-row">
+      <span>Base de Radares:</span>
+      <span id="dbStatus" style="color: #00e676;">Cargando...</span>
+    </div>
+
+    <div class="log-box" id="logBox">> Sistema iniciado. Comprobando actualizaciones...</div>
+  </div>
+
+  <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
+
+  <script>
+    // URL pública remota donde subes el JSON actualizado (ej. GitHub Pages / Gist raw)
+    const URL_REMOTA_RADARES = "https://raw.githubusercontent.com/tu-usuario/radares-moto/main/radares.json";
+    const CLAVE_LOCAL = "radares_moto_db";
+    const CLAVE_VERSION = "radares_moto_version";
+
+    // Base de datos de reserva si abres la app por primera vez sin internet
+    const RADARES_FALLBACK = [
+      { id: "BCN-SEM-01", tipo: "semáforo", lat: 41.4421, lon: 2.2285, rumbo: 135, distanciaAviso: 180, mensaje: "Atención, cámara de semáforo a 150 metros" },
+      { id: "C31-FIJO-01", tipo: "fijo", lat: 41.4365, lon: 2.2351, rumbo: 45, distanciaAviso: 350, mensaje: "Atención, radar fijo a 300 metros, límite 80" },
+      { id: "B20-TRAMO-01", tipo: "tramo", lat: 41.4602, lon: 2.2210, rumbo: 210, distanciaAviso: 400, mensaje: "Inicio de radar de tramo, límite 80" },
+      { id: "A2-MOVIL-01", tipo: "móvil", lat: 41.5350, lon: 1.8480, rumbo: 265, distanciaAviso: 450, mensaje: "Precaución, tramo habitual de radar móvil, límite 100" }
+    ];
+
+    let baseRadares = [];
+    let watchId = null;
+    let wakeLock = null;
+    let avisados = new Set();
+    const TOLERANCIA_RUMBO = 45;
+
+    function log(msg) {
+      const box = document.getElementById("logBox");
+      box.innerHTML += `<br>> ${msg}`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function locucion(texto) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const voz = new SpeechSynthesisUtterance(texto);
+        voz.lang = 'es-ES';
+        voz.rate = 1.1;
+        window.speechSynthesis.speak(voz);
+      }
+    }
+
+    // --- GESTOR DE BASE DE DATOS Y SINCRONIZACIÓN ---
+    async function inicializarBaseDatos() {
+      // 1. Cargar lo que tengamos en local (rápido y offline)
+      const datosGuardados = localStorage.getItem(CLAVE_LOCAL);
+      if (datosGuardados) {
+        try {
+          baseRadares = JSON.parse(datosGuardados);
+          actualizarUI_DB("Cargada local (" + baseRadares.length + " radares)");
+        } catch (e) {
+          baseRadares = RADARES_FALLBACK;
+        }
+      } else {
+        baseRadares = RADARES_FALLBACK;
+        localStorage.setItem(CLAVE_LOCAL, JSON.stringify(baseRadares));
+        actualizarUI_DB("Base por defecto (" + baseRadares.length + ")");
+      }
+
+      // 2. Intentar actualizar desde la nube en segundo plano (si hay internet)
+      if (navigator.onLine) {
+        try {
+          log("Buscando actualización remota...");
+          // Añadimos cache-buster para evitar respuestas cacheadas por el navegador
+          const res = await fetch(URL_REMOTA_RADARES + "?t=" + new Date().getTime(), { cache: "no-store" });
+          if (res.ok) {
+            const dataRemota = await res.json();
+            if (Array.isArray(dataRemota) && dataRemota.length > 0) {
+              baseRadares = dataRemota;
+              localStorage.setItem(CLAVE_LOCAL, JSON.stringify(dataRemota));
+              localStorage.setItem(CLAVE_VERSION, new Date().toISOString());
+              actualizarUI_DB("Actualizada hoy (" + baseRadares.length + ")");
+              log("Base sincronizada con éxito: " + baseRadares.length + " puntos.");
+            }
+          }
+        } catch (err) {
+          log("Modo offline: Usando datos locales guardados.");
+        }
+      } else {
+        log("Sin conexión: Operando con base de datos local.");
+      }
+    }
+
+    function actualizarUI_DB(texto) {
+      document.getElementById("dbStatus").innerText = texto;
+    }
+
+    // --- CÁLCULO ESPACIAL Y RUMBO ---
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) ** 2;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function coincideSentido(rumboMoto, rumboRadar) {
+      if (rumboRadar === null || rumboRadar === undefined || isNaN(rumboMoto)) return true;
+      let diff = Math.abs(rumboMoto - rumboRadar) % 360;
+      if (diff > 180) diff = 360 - diff;
+      return diff <= TOLERANCIA_RUMBO;
+    }
+
+    // --- CICLO DEL GPS ---
+    function procesarGPS(pos) {
+      document.getElementById("gpsStatus").innerText = "Activo";
+      document.getElementById("gpsStatus").style.color = "#00e676";
+
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const vel = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
+      const rumbo = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? Math.round(pos.coords.heading) : null;
+
+      document.getElementById("speedDisplay").innerText = vel;
+      document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
+
+      baseRadares.forEach(radar => {
+        const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
+        const radioAviso = radar.distanciaAviso || 300;
+
+        if (dist <= radioAviso && !avisados.has(radar.id)) {
+          if (coincideSentido(rumbo, radar.rumbo)) {
+            avisados.add(radar.id);
+            log(`ALERTA: ${radar.tipo.toUpperCase()} (${Math.round(dist)}m)`);
+            locucion(radar.mensaje);
+          }
+        } else if (dist > radioAviso * 1.8) {
+          avisados.delete(radar.id);
+        }
+      });
+    }
+
+    function toggleSistema() {
+      const btn = document.getElementById("mainBtn");
+
+      if (watchId === null) {
+        locucion("Avisador iniciado. Base de datos lista.");
+        if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
+
+        watchId = navigator.geolocation.watchPosition(
+          procesarGPS,
+          (err) => { log("Error GPS: " + err.message); },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+
+        btn.innerText = "DETENER SISTEMA";
+        btn.classList.add("active");
+        log("Rastreo GPS en marcha.");
+      } else {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        document.getElementById("gpsStatus").innerText = "Detenido";
+        document.getElementById("gpsStatus").style.color = "#ff9100";
+        document.getElementById("speedDisplay").innerText = "0";
+        document.getElementById("headingDisplay").innerText = "--";
+        btn.innerText = "ACTIVAR SISTEMA";
+        btn.classList.remove("active");
+        locucion("Sistema detenido.");
+      }
+    }
+
+    // Arranque automático de la sincronización al abrir el HTML
+    window.addEventListener("DOMContentLoaded", inicializarBaseDatos);
+  </script>
+</body>
+</html>
