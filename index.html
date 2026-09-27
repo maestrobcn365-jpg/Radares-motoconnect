@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Radar Moto BT - AutoSync</title>
+  <title>Radar Moto BT - Aviso Completo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -15,33 +15,95 @@
       align-items: center;
       justify-content: space-between;
       min-height: 100vh;
-      padding: 24px 16px;
+      padding: 16px;
     }
-    header { text-align: center; margin-top: 10px; }
-    h1 { font-size: 1.5rem; color: #ff3b30; letter-spacing: 1px; }
-    p.sub { font-size: 0.85rem; color: #888; margin-top: 4px; }
-    
+    header { text-align: center; margin-top: 5px; }
+    h1 { font-size: 1.3rem; color: #ff3b30; letter-spacing: 1px; }
+
+    /* TARJETA DE ALERTA DINÁMICA */
+    .alert-card {
+      display: none;
+      width: 100%;
+      max-width: 380px;
+      background: #1f1212;
+      border: 3px solid #ff3b30;
+      border-radius: 18px;
+      padding: 16px;
+      margin: 10px 0;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(255, 59, 48, 0.5);
+      animation: pulsoAlerta 1.2s infinite alternate;
+    }
+    @keyframes pulsoAlerta {
+      from { border-color: #ff3b30; transform: scale(1); }
+      to { border-color: #ffffff; transform: scale(1.02); }
+    }
+
+    .alert-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      margin-bottom: 10px;
+    }
+
+    /* SEÑAL DE TRÁFICO REDONDA OFICIAL */
+    .traffic-sign {
+      width: 82px;
+      height: 82px;
+      background-color: #ffffff;
+      border: 9px solid #d32f2f;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .traffic-sign span {
+      color: #000000;
+      font-size: 2.1rem;
+      font-weight: 900;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .radar-icon-box {
+      font-size: 3.2rem;
+    }
+
+    .radar-info-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .radar-info-dist {
+      font-size: 1.8rem;
+      color: #00e676;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    /* PANEL PRINCIPAL */
     .panel {
       background: #1a1a1a;
       border: 1px solid #2a2a2a;
       border-radius: 16px;
       width: 100%;
-      max-width: 400px;
-      padding: 20px;
+      max-width: 380px;
+      padding: 16px;
       text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     .metric-group {
       display: flex;
       justify-content: space-around;
-      margin: 15px 0;
+      margin: 10px 0;
     }
     .metric {
       display: flex;
       flex-direction: column;
     }
     .metric .val {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 700;
       color: #00e676;
     }
@@ -53,7 +115,7 @@
     .status-row {
       font-size: 0.8rem;
       color: #888;
-      margin: 6px 0;
+      margin: 4px 0;
       display: flex;
       justify-content: space-between;
     }
@@ -61,33 +123,32 @@
       background: #111;
       border: 1px solid #222;
       border-radius: 8px;
-      height: 90px;
-      padding: 10px;
+      height: 70px;
+      padding: 8px;
       font-size: 0.75rem;
       color: #bbb;
       overflow-y: auto;
       text-align: left;
       font-family: monospace;
-      margin-top: 10px;
+      margin-top: 8px;
     }
+
     .btn-action {
       background: #ff3b30;
       color: #fff;
       border: none;
       width: 100%;
-      max-width: 400px;
-      padding: 18px;
+      max-width: 380px;
+      padding: 16px;
       border-radius: 12px;
       font-size: 1.1rem;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4);
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     .btn-action.active {
       background: #333;
       color: #888;
-      box-shadow: none;
     }
   </style>
 </head>
@@ -95,9 +156,22 @@
 
   <header>
     <h1>RADAR MOTO BT</h1>
-    <p class="sub">Dispositivos: X10 / CAR-KIT</p>
+    <span style="font-size: 0.8rem; color: #888;">Audio BT: X10 / CAR-KIT</span>
   </header>
 
+  <!-- PANEL DE AVISO VISUAL -->
+  <div class="alert-card" id="radarAlertCard">
+    <div class="alert-top">
+      <div class="radar-icon-box" id="alertIcon">📷</div>
+      <div class="traffic-sign">
+        <span id="alertSpeedSign">50</span>
+      </div>
+    </div>
+    <div class="radar-info-title" id="alertTypeTitle">RADAR FIJO</div>
+    <div class="radar-info-dist" id="alertDistance">A 280 METROS</div>
+  </div>
+
+  <!-- PANEL DE VELOCIDAD Y ESTADO -->
   <div class="panel">
     <div class="metric-group">
       <div class="metric">
@@ -115,33 +189,28 @@
       <span id="gpsStatus" style="color: #ff9100;">En espera</span>
     </div>
     <div class="status-row">
-      <span>Base de Radares:</span>
-      <span id="dbStatus" style="color: #00e676;">Cargando...</span>
+      <span>Radares en memoria:</span>
+      <span id="dbStatus" style="color: #00e676;">4 cargados</span>
     </div>
 
-    <div class="log-box" id="logBox">> Sistema iniciado. Comprobando actualizaciones...</div>
+    <div class="log-box" id="logBox">> Pulsa Activar Sistema para iniciar...</div>
   </div>
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
 
   <script>
-    // URL pública remota donde subes el JSON actualizado (ej. GitHub Pages / Gist raw)
-    const URL_REMOTA_RADARES = "https://raw.githubusercontent.com/tu-usuario/radares-moto/main/radares.json";
-    const CLAVE_LOCAL = "radares_moto_db";
-    const CLAVE_VERSION = "radares_moto_version";
-
-    // Base de datos de reserva si abres la app por primera vez sin internet
-    const RADARES_FALLBACK = [
-      { id: "BCN-SEM-01", tipo: "semáforo", lat: 41.4421, lon: 2.2285, rumbo: 135, distanciaAviso: 180, mensaje: "Atención, cámara de semáforo a 150 metros" },
-      { id: "C31-FIJO-01", tipo: "fijo", lat: 41.4365, lon: 2.2351, rumbo: 45, distanciaAviso: 350, mensaje: "Atención, radar fijo a 300 metros, límite 80" },
-      { id: "B20-TRAMO-01", tipo: "tramo", lat: 41.4602, lon: 2.2210, rumbo: 210, distanciaAviso: 400, mensaje: "Inicio de radar de tramo, límite 80" },
-      { id: "A2-MOVIL-01", tipo: "móvil", lat: 41.5350, lon: 1.8480, rumbo: 265, distanciaAviso: 450, mensaje: "Precaución, tramo habitual de radar móvil, límite 100" }
+    // BASE DE DATOS DE PUNTOS DE CONTROL
+    const baseRadares = [
+      { id: "BCN-SEM-01", tipo: "semáforo", icone: "🚦", velMax: 50, lat: 41.4421, lon: 2.2285, rumbo: 135, distanciaAviso: 220 },
+      { id: "C31-FIJO-01", tipo: "fijo", icone: "📷", velMax: 80, lat: 41.4365, lon: 2.2351, rumbo: 45, distanciaAviso: 350 },
+      { id: "B20-TRAMO-01", tipo: "tramo", icone: "⏱️", velMax: 80, lat: 41.4602, lon: 2.2210, rumbo: 210, distanciaAviso: 400 },
+      { id: "A2-MOVIL-01", tipo: "móvil habitual", icone: "🚗", velMax: 100, lat: 41.5350, lon: 1.8480, rumbo: 265, distanciaAviso: 450 }
     ];
 
-    let baseRadares = [];
     let watchId = null;
     let wakeLock = null;
-    let avisados = new Set();
+    // Registro de etapas de voz por cada radar para no repetir avisos
+    const avisosPorVoz = {}; 
     const TOLERANCIA_RUMBO = 45;
 
     function log(msg) {
@@ -160,52 +229,6 @@
       }
     }
 
-    // --- GESTOR DE BASE DE DATOS Y SINCRONIZACIÓN ---
-    async function inicializarBaseDatos() {
-      // 1. Cargar lo que tengamos en local (rápido y offline)
-      const datosGuardados = localStorage.getItem(CLAVE_LOCAL);
-      if (datosGuardados) {
-        try {
-          baseRadares = JSON.parse(datosGuardados);
-          actualizarUI_DB("Cargada local (" + baseRadares.length + " radares)");
-        } catch (e) {
-          baseRadares = RADARES_FALLBACK;
-        }
-      } else {
-        baseRadares = RADARES_FALLBACK;
-        localStorage.setItem(CLAVE_LOCAL, JSON.stringify(baseRadares));
-        actualizarUI_DB("Base por defecto (" + baseRadares.length + ")");
-      }
-
-      // 2. Intentar actualizar desde la nube en segundo plano (si hay internet)
-      if (navigator.onLine) {
-        try {
-          log("Buscando actualización remota...");
-          // Añadimos cache-buster para evitar respuestas cacheadas por el navegador
-          const res = await fetch(URL_REMOTA_RADARES + "?t=" + new Date().getTime(), { cache: "no-store" });
-          if (res.ok) {
-            const dataRemota = await res.json();
-            if (Array.isArray(dataRemota) && dataRemota.length > 0) {
-              baseRadares = dataRemota;
-              localStorage.setItem(CLAVE_LOCAL, JSON.stringify(dataRemota));
-              localStorage.setItem(CLAVE_VERSION, new Date().toISOString());
-              actualizarUI_DB("Actualizada hoy (" + baseRadares.length + ")");
-              log("Base sincronizada con éxito: " + baseRadares.length + " puntos.");
-            }
-          }
-        } catch (err) {
-          log("Modo offline: Usando datos locales guardados.");
-        }
-      } else {
-        log("Sin conexión: Operando con base de datos local.");
-      }
-    }
-
-    function actualizarUI_DB(texto) {
-      document.getElementById("dbStatus").innerText = texto;
-    }
-
-    // --- CÁLCULO ESPACIAL Y RUMBO ---
     function calcularDistancia(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -223,7 +246,47 @@
       return diff <= TOLERANCIA_RUMBO;
     }
 
-    // --- CICLO DEL GPS ---
+    function mostrarAlertaVisual(radar, distancia) {
+      const card = document.getElementById("radarAlertCard");
+      document.getElementById("alertIcon").innerText = radar.icone || "📷";
+      document.getElementById("alertSpeedSign").innerText = radar.velMax || "--";
+      document.getElementById("alertTypeTitle").innerText = `RADAR ${radar.tipo.toUpperCase()}`;
+      document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
+      card.style.display = "block";
+    }
+
+    function ocultarAlertaVisual() {
+      document.getElementById("radarAlertCard").style.display = "none";
+    }
+
+    // GESTOR DE AVISOS POR VOZ ESCALONADOS
+    function gestionarVozEscalonada(radar, dist) {
+      if (!avisosPorVoz[radar.id]) {
+        avisosPorVoz[radar.id] = { fase300: false, fase150: false, faseFin: false };
+      }
+
+      const estado = avisosPorVoz[radar.id];
+
+      // 1. Primer aviso: entrada al rango (aprox 300 metros)
+      if (dist <= 320 && dist > 180 && !estado.fase300) {
+        estado.fase300 = true;
+        log(`VOZ: Radar ${radar.tipo} a 300m (Límite ${radar.velMax})`);
+        locucion(`Atención, radar ${radar.tipo} a trescientos metros, límite ${radar.velMax}`);
+      }
+      // 2. Segundo aviso intermedio: confirmación de distancia
+      else if (dist <= 170 && dist > 70 && !estado.fase150) {
+        estado.fase150 = true;
+        log(`VOZ: A 150 metros`);
+        locucion(`A ciento cincuenta metros`);
+      }
+      // 3. Tercer aviso: radar superado o punto rebasado
+      else if (dist <= 45 && !estado.faseFin) {
+        estado.faseFin = true;
+        log(`VOZ: Punto de control`);
+        locucion(`Punto de control`);
+      }
+    }
+
     function procesarGPS(pos) {
       document.getElementById("gpsStatus").innerText = "Activo";
       document.getElementById("gpsStatus").style.color = "#00e676";
@@ -236,27 +299,45 @@
       document.getElementById("speedDisplay").innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
+      let radarActivo = null;
+      let distanciaMinima = Infinity;
+
       baseRadares.forEach(radar => {
         const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
         const radioAviso = radar.distanciaAviso || 300;
 
-        if (dist <= radioAviso && !avisados.has(radar.id)) {
+        if (dist <= radioAviso) {
           if (coincideSentido(rumbo, radar.rumbo)) {
-            avisados.add(radar.id);
-            log(`ALERTA: ${radar.tipo.toUpperCase()} (${Math.round(dist)}m)`);
-            locucion(radar.mensaje);
+            // Guardamos el radar más cercano para actualizar el panel visual
+            if (dist < distanciaMinima) {
+              distanciaMinima = dist;
+              radarActivo = radar;
+            }
+
+            // Evaluar avisos escalonados por audio
+            gestionarVozEscalonada(radar, dist);
           }
-        } else if (dist > radioAviso * 1.8) {
-          avisados.delete(radar.id);
+        } 
+        // Si nos alejamos más allá del radio, reseteamos las etapas de voz
+        else if (dist > radioAviso * 1.6) {
+          if (avisosPorVoz[radar.id]) {
+            delete avisosPorVoz[radar.id];
+          }
         }
       });
+
+      if (radarActivo) {
+        mostrarAlertaVisual(radarActivo, distanciaMinima);
+      } else {
+        ocultarAlertaVisual();
+      }
     }
 
     function toggleSistema() {
       const btn = document.getElementById("mainBtn");
 
       if (watchId === null) {
-        locucion("Avisador iniciado. Base de datos lista.");
+        locucion("Sistema de radares activado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
         watchId = navigator.geolocation.watchPosition(
@@ -271,6 +352,7 @@
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
+        ocultarAlertaVisual();
         document.getElementById("gpsStatus").innerText = "Detenido";
         document.getElementById("gpsStatus").style.color = "#ff9100";
         document.getElementById("speedDisplay").innerText = "0";
@@ -280,9 +362,6 @@
         locucion("Sistema detenido.");
       }
     }
-
-    // Arranque automático de la sincronización al abrir el HTML
-    window.addEventListener("DOMContentLoaded", inicializarBaseDatos);
   </script>
 </body>
 </html>
