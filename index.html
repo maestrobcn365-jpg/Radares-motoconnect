@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Radar Moto BT - Aviso Completo</title>
+  <title>Radar Moto BT - Auto Sync</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -20,7 +20,7 @@
     header { text-align: center; margin-top: 5px; }
     h1 { font-size: 1.3rem; color: #ff3b30; letter-spacing: 1px; }
 
-    /* TARJETA DE ALERTA DINÁMICA */
+    /* TARJETA DINÁMICA DE ALERTA */
     .alert-card {
       display: none;
       width: 100%;
@@ -65,10 +65,7 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .radar-icon-box {
-      font-size: 3.2rem;
-    }
-
+    .radar-icon-box { font-size: 3.2rem; }
     .radar-info-title {
       font-size: 1.2rem;
       font-weight: bold;
@@ -98,20 +95,10 @@
       justify-content: space-around;
       margin: 10px 0;
     }
-    .metric {
-      display: flex;
-      flex-direction: column;
-    }
-    .metric .val {
-      font-size: 2.4rem;
-      font-weight: 700;
-      color: #00e676;
-    }
-    .metric .lbl {
-      font-size: 0.75rem;
-      color: #aaa;
-      text-transform: uppercase;
-    }
+    .metric { display: flex; flex-direction: column; }
+    .metric .val { font-size: 2.4rem; font-weight: 700; color: #00e676; }
+    .metric .lbl { font-size: 0.75rem; color: #aaa; text-transform: uppercase; }
+
     .status-row {
       font-size: 0.8rem;
       color: #888;
@@ -123,7 +110,7 @@
       background: #111;
       border: 1px solid #222;
       border-radius: 8px;
-      height: 70px;
+      height: 75px;
       padding: 8px;
       font-size: 0.75rem;
       color: #bbb;
@@ -146,10 +133,7 @@
       cursor: pointer;
       margin-bottom: 10px;
     }
-    .btn-action.active {
-      background: #333;
-      color: #888;
-    }
+    .btn-action.active { background: #333; color: #888; }
   </style>
 </head>
 <body>
@@ -159,19 +143,19 @@
     <span style="font-size: 0.8rem; color: #888;">Audio BT: X10 / CAR-KIT</span>
   </header>
 
-  <!-- PANEL DE AVISO VISUAL -->
+  <!-- RECUADRO DE ALERTA VISUAL -->
   <div class="alert-card" id="radarAlertCard">
     <div class="alert-top">
       <div class="radar-icon-box" id="alertIcon">📷</div>
       <div class="traffic-sign">
-        <span id="alertSpeedSign">50</span>
+        <span id="alertSpeedSign">--</span>
       </div>
     </div>
-    <div class="radar-info-title" id="alertTypeTitle">RADAR FIJO</div>
-    <div class="radar-info-dist" id="alertDistance">A 280 METROS</div>
+    <div class="radar-info-title" id="alertTypeTitle">RADAR</div>
+    <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
   </div>
 
-  <!-- PANEL DE VELOCIDAD Y ESTADO -->
+  <!-- PANEL DE INSTRUMENTOS -->
   <div class="panel">
     <div class="metric-group">
       <div class="metric">
@@ -189,28 +173,62 @@
       <span id="gpsStatus" style="color: #ff9100;">En espera</span>
     </div>
     <div class="status-row">
-      <span>Radares en memoria:</span>
-      <span id="dbStatus" style="color: #00e676;">4 cargados</span>
+      <span>Base de Radares:</span>
+      <span id="dbStatus" style="color: #00e676;">Inicializando...</span>
     </div>
 
-    <div class="log-box" id="logBox">> Pulsa Activar Sistema para iniciar...</div>
+    <div class="log-box" id="logBox">> Comprobando actualizaciones oficiales...</div>
   </div>
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
 
   <script>
-    // BASE DE DATOS DE PUNTOS DE CONTROL
-    const baseRadares = [
-      { id: "BCN-SEM-01", tipo: "semáforo", icone: "🚦", velMax: 50, lat: 41.4421, lon: 2.2285, rumbo: 135, distanciaAviso: 220 },
-      { id: "C31-FIJO-01", tipo: "fijo", icone: "📷", velMax: 80, lat: 41.4365, lon: 2.2351, rumbo: 45, distanciaAviso: 350 },
-      { id: "B20-TRAMO-01", tipo: "tramo", icone: "⏱️", velMax: 80, lat: 41.4602, lon: 2.2210, rumbo: 210, distanciaAviso: 400 },
-      { id: "A2-MOVIL-01", tipo: "móvil habitual", icone: "🚗", velMax: 100, lat: 41.5350, lon: 1.8480, rumbo: 265, distanciaAviso: 450 }
+    // 1. BASE BASE LOCAL (Disponible siempre offline)
+    const baseLocalPrecargada = [
+      {"id":"BCN-RO-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":350},
+      {"id":"BCN-RO-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":350},
+      {"id":"BCN-RL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3980,"lon":2.2030,"rumbo":40,"distanciaAviso":350},
+      {"id":"BCN-RL-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4250,"lon":2.2215,"rumbo":220,"distanciaAviso":350},
+      {"id":"BCN-SEM-ARAG","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3912,"lon":2.1645,"rumbo":50,"distanciaAviso":200},
+      {"id":"BCN-SEM-DIAG","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3880,"lon":2.1290,"rumbo":70,"distanciaAviso":200},
+      {"id":"BCN-SEM-GRAN","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4050,"lon":2.1890,"rumbo":45,"distanciaAviso":200},
+      {"id":"BDN-SEM-MAR","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4450,"lon":2.2380,"rumbo":130,"distanciaAviso":200},
+      {"id":"BDN-C31-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4485,"lon":2.2450,"rumbo":45,"distanciaAviso":350},
+      {"id":"BDN-C31-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4420,"lon":2.2310,"rumbo":225,"distanciaAviso":350},
+      {"id":"B20-TR-INI","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4610,"lon":2.2230,"rumbo":215,"distanciaAviso":400},
+      {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":400},
+      {"id":"C58-MONT-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4920,"lon":2.1680,"rumbo":330,"distanciaAviso":400},
+      {"id":"C58-SAB-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5310,"lon":2.1150,"rumbo":150,"distanciaAviso":400},
+      {"id":"C16-VALLV-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4150,"lon":2.0980,"rumbo":310,"distanciaAviso":350},
+      {"id":"C16-TERR-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5620,"lon":2.0150,"rumbo":18,"distanciaAviso":400},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":400},
+      {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":400},
+      {"id":"C32-MAT-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5450,"lon":2.4280,"rumbo":50,"distanciaAviso":400},
+      {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":350},
+      {"id":"C31-GAV-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2850,"lon":2.0150,"rumbo":55,"distanciaAviso":350},
+      {"id":"A2-CORB-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4380,"lon":1.9720,"rumbo":290,"distanciaAviso":400},
+      {"id":"A2-MART-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4810,"lon":1.9180,"rumbo":110,"distanciaAviso":400},
+      {"id":"A2-ABR-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5180,"lon":1.8950,"rumbo":295,"distanciaAviso":400},
+      {"id":"A2-COLL-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.5720,"lon":1.8310,"rumbo":275,"distanciaAviso":450},
+      {"id":"A2-BRUC-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5830,"lon":1.7780,"rumbo":260,"distanciaAviso":400},
+      {"id":"A2-IGUA-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5920,"lon":1.6520,"rumbo":90,"distanciaAviso":400},
+      {"id":"C55-MONTS-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.6110,"lon":1.8620,"rumbo":345,"distanciaAviso":400},
+      {"id":"C55-COLL-MOV","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.5820,"lon":1.8750,"rumbo":165,"distanciaAviso":450},
+      {"id":"B224-PIERA-MOV","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":350},
+      {"id":"B224-MASQ-MOV","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":400},
+      {"id":"AP7-SANTC-01","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4880,"lon":2.0520,"rumbo":225,"distanciaAviso":500},
+      {"id":"AP7-MOLLET-02","tipo":"fijo","icone":"📷","velMax":120,"lat":41.5380,"lon":2.2080,"rumbo":45,"distanciaAviso":500},
+      {"id":"AP7-GELIDA-03","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4410,"lon":1.8820,"rumbo":230,"distanciaAviso":500},
+      {"id":"C17-PARETS-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5620,"lon":2.2350,"rumbo":15,"distanciaAviso":400},
+      {"id":"C17-VIC-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.9120,"lon":2.2480,"rumbo":195,"distanciaAviso":450},
+      {"id":"N340-VALLIR-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.3850,"lon":1.9520,"rumbo":260,"distanciaAviso":350},
+      {"id":"N340-VILLAF-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3390,"lon":1.7120,"rumbo":80,"distanciaAviso":400}
     ];
 
+    let baseRadares = [];
     let watchId = null;
     let wakeLock = null;
-    // Registro de etapas de voz por cada radar para no repetir avisos
-    const avisosPorVoz = {}; 
+    const avisosPorVoz = {};
     const TOLERANCIA_RUMBO = 45;
 
     function log(msg) {
@@ -227,6 +245,47 @@
         voz.rate = 1.1;
         window.speechSynthesis.speak(voz);
       }
+    }
+
+    // 2. MOTOR DE ACTUALIZACIÓN AUTOMÁTICA OFFLINE/ONLINE
+    async function sincronizarBaseRadares() {
+      // Paso A: Cargar lo guardado previamente en el móvil
+      const memoria = localStorage.getItem("radares_moto_cache");
+      if (memoria) {
+        try {
+          baseRadares = JSON.parse(memoria);
+          document.getElementById("dbStatus").innerText = `${baseRadares.length} radares (memoria)`;
+        } catch(e) {}
+      }
+
+      if (!baseRadares || baseRadares.length === 0) {
+        baseRadares = [...baseLocalPrecargada];
+        document.getElementById("dbStatus").innerText = `${baseRadares.length} radares (base)`;
+      }
+
+      // Paso B: Comprobar fuentes remotas y actualizar automáticamente
+      try {
+        log("Buscando actualización remota...");
+        // Consulta directa al repositorio en segundo plano sin bloquear
+        const res = await fetch("radares.json?nocache=" + Date.now(), { cache: "no-store" });
+        if (res.ok) {
+          const remotos = await res.json();
+          if (Array.isArray(remotos) && remotos.length > 0) {
+            baseRadares = remotos;
+            localStorage.setItem("radares_moto_cache", JSON.stringify(remotos));
+            document.getElementById("dbStatus").innerText = `${baseRadares.length} radares (al día)`;
+            log(`Base actualizada con éxito: ${baseRadares.length} radares.`);
+            return;
+          }
+        }
+      } catch (err) {
+        // Sin cobertura o sin archivo remoto: usa el almacenamiento local sin fallar
+      }
+
+      // Si no hay archivo remoto, guardamos la base amplia local
+      localStorage.setItem("radares_moto_cache", JSON.stringify(baseRadares));
+      document.getElementById("dbStatus").innerText = `${baseRadares.length} radares activos`;
+      log(`Listo: ${baseRadares.length} puntos en memoria.`);
     }
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -259,7 +318,7 @@
       document.getElementById("radarAlertCard").style.display = "none";
     }
 
-    // GESTOR DE AVISOS POR VOZ ESCALONADOS
+    // GESTIÓN DE AVISOS ESCALONADOS (300m -> 150m -> Fin)
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase300: false, fase150: false, faseFin: false };
@@ -267,22 +326,19 @@
 
       const estado = avisosPorVoz[radar.id];
 
-      // 1. Primer aviso: entrada al rango (aprox 300 metros)
       if (dist <= 320 && dist > 180 && !estado.fase300) {
         estado.fase300 = true;
-        log(`VOZ: Radar ${radar.tipo} a 300m (Límite ${radar.velMax})`);
+        log(`VOZ: ${radar.tipo.toUpperCase()} a 300m (${radar.velMax})`);
         locucion(`Atención, radar ${radar.tipo} a trescientos metros, límite ${radar.velMax}`);
       }
-      // 2. Segundo aviso intermedio: confirmación de distancia
       else if (dist <= 170 && dist > 70 && !estado.fase150) {
         estado.fase150 = true;
         log(`VOZ: A 150 metros`);
         locucion(`A ciento cincuenta metros`);
       }
-      // 3. Tercer aviso: radar superado o punto rebasado
       else if (dist <= 45 && !estado.faseFin) {
         estado.faseFin = true;
-        log(`VOZ: Punto de control`);
+        log(`VOZ: Superado`);
         locucion(`Punto de control`);
       }
     }
@@ -304,25 +360,18 @@
 
       baseRadares.forEach(radar => {
         const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
-        const radioAviso = radar.distanciaAviso || 300;
+        const radioAviso = radar.distanciaAviso || 350;
 
         if (dist <= radioAviso) {
           if (coincideSentido(rumbo, radar.rumbo)) {
-            // Guardamos el radar más cercano para actualizar el panel visual
             if (dist < distanciaMinima) {
               distanciaMinima = dist;
               radarActivo = radar;
             }
-
-            // Evaluar avisos escalonados por audio
             gestionarVozEscalonada(radar, dist);
           }
-        } 
-        // Si nos alejamos más allá del radio, reseteamos las etapas de voz
-        else if (dist > radioAviso * 1.6) {
-          if (avisosPorVoz[radar.id]) {
-            delete avisosPorVoz[radar.id];
-          }
+        } else if (dist > radioAviso * 1.6) {
+          if (avisosPorVoz[radar.id]) delete avisosPorVoz[radar.id];
         }
       });
 
@@ -362,6 +411,8 @@
         locucion("Sistema detenido.");
       }
     }
+
+    window.addEventListener("DOMContentLoaded", sincronizarBaseRadares);
   </script>
 </body>
 </html>
