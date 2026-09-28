@@ -661,7 +661,7 @@
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
 
-  <!-- MODAL RESUMEN DE RUTA TRAS DETENER / RECUPERACIÓN -->
+  <!-- MODAL RESUMEN DE RUTA TRAS DETENER -->
   <div class="modal-overlay" id="modalResumen">
     <div class="modal-box">
       <div class="modal-header">
@@ -874,7 +874,7 @@
       {"id":"AP7-VILADEM-31","tipo":"fijo","icone":"📷","velMax":120,"lat":42.1250,"lon":2.8950,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-FIGUER-32","tipo":"fijo","icone":"📷","velMax":120,"lat":42.2710,"lon":2.9450,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-CAPMANY-33","tipo":"fijo","icone":"📷","velMax":120,"lat":42.3680,"lon":2.9150,"rumbo":355,"distanciaAviso":650},
-      {"id":"AP7-JONQUERA-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
+      {"id":"AP7-JONQUER-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
       {"id":"C17-MONTC-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4880,"lon":2.1880,"rumbo":20,"distanciaAviso":500},
       {"id":"C17-LAFLOR-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5080,"lon":2.2020,"rumbo":200,"distanciaAviso":500},
       {"id":"C17-MOLLET-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5350,"lon":2.2150,"rumbo":200,"distanciaAviso":500},
@@ -1060,7 +1060,7 @@
     let tiempoParadoMs = 0;
     let avisoFatigaEmitido = false;
 
-    // TELEMETRÍA Y AUTO-GUARDADO
+    // TELEMETRÍA
     let rutaEnCurso = {
       inicioMs: 0,
       finMs: 0,
@@ -1073,38 +1073,34 @@
     let ultimoPuntoGrabadoMs = 0;
     let rutaPendienteGuardar = null;
 
-    // PROTECCIÓN DE CIERRE ACCIDENTAL
-    window.addEventListener("beforeunload", (e) => {
-      if (watchId !== null || (rutaEnCurso && rutaEnCurso.distanciaMetros > 100)) {
-        e.preventDefault();
-        e.returnValue = "Tienes una ruta activa en curso. ¿Seguro que deseas salir?";
-        return e.returnValue;
+    // --- PROTECCIÓN BOTÓN ATRÁS (GESTO DE SALIDA) ---
+    // Empuja un estado fantasma al historial cuando el sistema está activo
+    function gestionarEstadoHistorial(activar) {
+      if (activar) {
+        history.pushState({ sistemaActivo: true }, "", window.location.href);
+        window.addEventListener("popstate", bloquearBotonAtrasEnRuta);
+      } else {
+        window.removeEventListener("popstate", bloquearBotonAtrasEnRuta);
       }
-    });
-
-    function autoGuardarRutaEnCaliente() {
-      try {
-        if (rutaEnCurso && rutaEnCurso.distanciaMetros > 50) {
-          localStorage.setItem("ruta_activa_recuperable", JSON.stringify(rutaEnCurso));
-        }
-      } catch(e){}
     }
 
-    function comprobarRutaRecuperable() {
-      try {
-        const rutaRecuperadaStr = localStorage.getItem("ruta_activa_recuperable");
-        if (rutaRecuperadaStr) {
-          const ruta = JSON.parse(rutaRecuperadaStr);
-          if (ruta && ruta.distanciaMetros > 100 && ruta.puntos && ruta.puntos.length > 0) {
-            const titEl = document.getElementById("modalResumenTitulo");
-            if (titEl) titEl.innerText = "⚠️ Ruta recuperada tras cierre";
-            mostrarModalResumen(ruta);
-          } else {
-            localStorage.removeItem("ruta_activa_recuperable");
-          }
+    function bloquearBotonAtrasEnRuta(e) {
+      if (watchId !== null) {
+        // Vuelve a empujar el estado para atrapar el botón atrás de nuevo
+        history.pushState({ sistemaActivo: true }, "", window.location.href);
+        locucion("El avisador está activo. Minimiza la aplicación para usarla en segundo plano, o pulsa detener para salir.");
+        
+        // Muestra un aviso visual flotante temporal
+        let alertBox = document.getElementById("toastAlertaAtras");
+        if (!alertBox) {
+          alertBox = document.createElement("div");
+          alertBox.id = "toastAlertaAtras";
+          alertBox.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:rgba(255,59,48,0.95); color:#fff; padding:8px 16px; border-radius:20px; font-size:0.75rem; font-weight:800; z-index:10001; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.6);";
+          document.body.appendChild(alertBox);
         }
-      } catch(e) {
-        localStorage.removeItem("ruta_activa_recuperable");
+        alertBox.innerText = "⚠️ Avisador activo: Minimiza la app o pulsa DETENER";
+        alertBox.style.display = "block";
+        setTimeout(() => { alertBox.style.display = "none"; }, 4000);
       }
     }
 
@@ -1116,6 +1112,8 @@
         // 1. ACTIVAR
         activarAudioSegundoPlano();
         lanzarNotificacionSuperior();
+        gestionarEstadoHistorial(true);
+
         tiempoConduciendoMs = 0;
         tiempoParadoMs = 0;
         avisoFatigaEmitido = false;
@@ -1131,12 +1129,10 @@
           ciudadDestino: ""
         };
         ultimoPuntoGrabadoMs = Date.now();
-        localStorage.removeItem("ruta_activa_recuperable");
 
         locucion("Avisador activado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
-        // Verificación de disponibilidad de GPS
         if (!navigator.geolocation) {
           log("Error: Tu navegador no soporta geolocalización.");
           return;
@@ -1164,7 +1160,7 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("Sistema, GPS y telemetría de ruta activos.");
+        log("Sistema, GPS y telemetría activos.");
       } else {
         // 2. DETENER
         navigator.geolocation.clearWatch(watchId);
@@ -1173,6 +1169,8 @@
         desactivarAudioSegundoPlano();
         cerrarNotificacionAndroid();
         ocultarAlertaVisual();
+        gestionarEstadoHistorial(false);
+
         document.getElementById("gpsStatus").innerText = "Detenido";
         document.getElementById("gpsStatus").style.color = "#ff9100";
         document.getElementById("speedDisplay").innerText = "0";
@@ -1189,8 +1187,6 @@
           const titEl = document.getElementById("modalResumenTitulo");
           if (titEl) titEl.innerText = "🏁 Resumen de la Ruta";
           mostrarModalResumen(rutaEnCurso);
-        } else {
-          localStorage.removeItem("ruta_activa_recuperable");
         }
       }
     }
@@ -1628,7 +1624,6 @@
       if (ahora - ultimoPuntoGrabadoMs > 8000 && vel > 5) {
         ultimoPuntoGrabadoMs = ahora;
         rutaEnCurso.puntos.push({ lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)), vel, time: ahora });
-        autoGuardarRutaEnCaliente();
       }
 
       if (rumbo === null && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
@@ -1724,7 +1719,6 @@
 
     function cerrarModalResumen() {
       document.getElementById("modalResumen").style.display = "none";
-      localStorage.removeItem("ruta_activa_recuperable");
       rutaPendienteGuardar = null;
     }
 
@@ -1752,7 +1746,6 @@
 
       rutas.unshift(rutaObjeto);
       localStorage.setItem("mis_rutas_moto", JSON.stringify(rutas));
-      localStorage.removeItem("ruta_activa_recuperable");
       log(`Ruta guardada: ${titulo} (${rutaObjeto.distanciaKm} km)`);
       cerrarModalResumen();
     }
@@ -1855,7 +1848,6 @@
     window.addEventListener("DOMContentLoaded", () => {
       actualizarEstadoContador();
       log(`Cataluña completa: ${baseRadares.length} puntos cargados.`);
-      comprobarRutaRecuperable();
     });
   </script>
 </body>
