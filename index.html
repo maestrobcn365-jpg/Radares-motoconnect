@@ -656,12 +656,16 @@
             radaresWazeActivos = alertas;
             actualizarEstadoContador();
             if (alertas.length > 0) {
-              log(`Waze: ${alertas.length} móviles reportados cerca.`);
+              log(`Waze: ${alertas.length} móviles activos cerca.`);
+            } else {
+              log(`Waze: Conectado (0 móviles en tu zona).`);
             }
           }
+        } else {
+          log(`Waze: Error de respuesta (${res.status})`);
         }
       } catch (e) {
-        // Red no disponible momentáneamente
+        log(`Waze: Sin conexión`);
       }
     }
 
