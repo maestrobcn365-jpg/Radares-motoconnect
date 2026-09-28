@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Avisador de Radares - Cataluña Total</title>
+  <title>Avisador de Radares - Cataluña Pro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -127,6 +127,7 @@
       font-weight: 800;
     }
 
+    /* INSTRUMENTAL DE TRES RELOJES: VELOCIDAD - LÍMITE VÍA - RUMBO */
     .panel {
       background: rgba(22, 25, 30, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -138,22 +139,53 @@
     }
     .metric-group {
       display: flex;
-      justify-content: space-around;
-      margin-bottom: 6px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 0 6px;
     }
-    .metric { display: flex; flex-direction: column; }
+    .metric {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 75px;
+    }
     .metric .val {
-      font-size: 2.2rem;
+      font-size: 2.1rem;
       font-weight: 800;
       color: #00e676;
       line-height: 1.1;
       text-shadow: 0 0 12px rgba(0, 230, 118, 0.35);
     }
+    .metric .val.danger {
+      color: #ff3b30;
+      text-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
+    }
     .metric .lbl {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: #8c9ba5;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    /* CHAPA MINIATURA SEÑAL LÍMITE DE LA VÍA */
+    .speed-limit-badge {
+      width: 48px;
+      height: 48px;
+      background-color: #ffffff;
+      border: 5px solid #d32f2f;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+      margin-bottom: 2px;
+    }
+    .speed-limit-badge span {
+      color: #000000;
+      font-size: 1.35rem;
+      font-weight: 900;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     .status-row {
@@ -236,12 +268,22 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
+    <!-- PANEL INSTRUMENTOS -->
     <div class="panel">
       <div class="metric-group">
         <div class="metric">
           <span class="val" id="speedDisplay">0</span>
           <span class="lbl">km/h</span>
         </div>
+        
+        <!-- INDICADOR LÍMITE DE LA VÍA -->
+        <div class="metric">
+          <div class="speed-limit-badge">
+            <span id="roadSpeedLimit">--</span>
+          </div>
+          <span class="lbl">Límite Vía</span>
+        </div>
+
         <div class="metric">
           <span class="val" id="headingDisplay">--</span>
           <span class="lbl">Rumbo (°)</span>
@@ -270,9 +312,8 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // BASE OFICIAL INTEGRAL DE CATALUÑA (>300 PUNTOS: FIJOS, TRAMOS, SEMÁFOROS Y CABINAS)
+    // BASE COMPLETA CATALUÑA
     const baseRadares = [
-      // 1. BARCELONA CAPITAL: RONDAS (B-10, B-20) Y ENTRADAS
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":450},
       {"id":"BCN-B20-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":450},
       {"id":"BCN-B20-03","tipo":"fijo","icone":"📷","velMax":70,"lat":41.3985,"lon":2.1120,"rumbo":210,"distanciaAviso":450},
@@ -288,8 +329,6 @@
       {"id":"BCN-B10-07","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4120,"lon":2.2150,"rumbo":225,"distanciaAviso":450},
       {"id":"BCN-GLOR-TR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":350},
       {"id":"BCN-GLOR-TR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":350},
-
-      // 2. BARCELONA CAPITAL: ARTERIAS Y FOTO-ROJO DE SEMÁFORO
       {"id":"BCN-DIAG-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3850,"lon":2.1190,"rumbo":70,"distanciaAviso":350},
       {"id":"BCN-DIAG-02","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3895,"lon":2.1310,"rumbo":250,"distanciaAviso":350},
       {"id":"BCN-DIAG-03","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4020,"lon":2.1980,"rumbo":250,"distanciaAviso":350},
@@ -313,8 +352,6 @@
       {"id":"BCN-SEM-NUMA","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3820,"lon":2.1380,"rumbo":315,"distanciaAviso":250},
       {"id":"BCN-SEM-URGEL","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3860,"lon":2.1540,"rumbo":135,"distanciaAviso":250},
       {"id":"BCN-SEM-MALL2","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3970,"lon":2.1680,"rumbo":50,"distanciaAviso":250},
-
-      // 3. BADALONA, SANT ADRIÀ, SANTA COLOMA Y MONTGAT
       {"id":"BDN-SEM-MAR","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4450,"lon":2.2380,"rumbo":130,"distanciaAviso":250},
       {"id":"BDN-SEM-ALF","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4390,"lon":2.2290,"rumbo":40,"distanciaAviso":250},
       {"id":"BDN-SEM-FRAN","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4510,"lon":2.2460,"rumbo":50,"distanciaAviso":250},
@@ -326,8 +363,6 @@
       {"id":"MONT-C31-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4650,"lon":2.2780,"rumbo":45,"distanciaAviso":500},
       {"id":"B20-TR-INI","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4610,"lon":2.2230,"rumbo":215,"distanciaAviso":600},
       {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":600},
-
-      // 4. BAIX LLOBREGAT (C-31, C-32, B-23, A-2, C-245)
       {"id":"C31-BELLV-REM","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3450,"lon":2.1080,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-VILAD-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2980,"lon":2.0380,"rumbo":55,"distanciaAviso":500},
@@ -345,8 +380,6 @@
       {"id":"A2-STVIC-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.3980,"lon":2.0110,"rumbo":280,"distanciaAviso":650},
       {"id":"A2-MART-04","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4810,"lon":1.9180,"rumbo":110,"distanciaAviso":650},
       {"id":"A2-ABR-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5180,"lon":1.8950,"rumbo":295,"distanciaAviso":650},
-
-      // 5. ANOIA, MONTSERRAT, B-224 Y C-55
       {"id":"A2-COLL-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.5720,"lon":1.8310,"rumbo":275,"distanciaAviso":650},
       {"id":"A2-BRUC-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5830,"lon":1.7780,"rumbo":260,"distanciaAviso":650},
       {"id":"A2-CASTELL-06","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5910,"lon":1.7150,"rumbo":80,"distanciaAviso":650},
@@ -362,8 +395,6 @@
       {"id":"C55-MANRESA-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.7120,"lon":1.8410,"rumbo":170,"distanciaAviso":650},
       {"id":"C55-SURI-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.8150,"lon":1.7650,"rumbo":340,"distanciaAviso":650},
       {"id":"C55-CARD-05","tipo":"fijo","icone":"📷","velMax":90,"lat":41.9120,"lon":1.6780,"rumbo":350,"distanciaAviso":650},
-
-      // 6. VALLÈS OCCIDENTAL Y ORIENTAL (C-58, C-16, C-33, C-59, C-60, C-35, C-17)
       {"id":"C58-MONT-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4920,"lon":2.1680,"rumbo":330,"distanciaAviso":650},
       {"id":"C58-RIP-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5120,"lon":2.1480,"rumbo":150,"distanciaAviso":650},
       {"id":"C58-BADIA-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5050,"lon":2.1350,"rumbo":330,"distanciaAviso":650},
@@ -387,8 +418,6 @@
       {"id":"C59-CALDES-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.6420,"lon":2.1650,"rumbo":195,"distanciaAviso":500},
       {"id":"C59-STFELIU-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.7150,"lon":2.1580,"rumbo":15,"distanciaAviso":500},
       {"id":"C59-MOIA-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.7950,"lon":2.1020,"rumbo":350,"distanciaAviso":650},
-
-      // 7. MARESME Y C-32 NORTE / N-II
       {"id":"C32-MAT-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5450,"lon":2.4280,"rumbo":50,"distanciaAviso":650},
       {"id":"C32-AREN-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5820,"lon":2.5450,"rumbo":45,"distanciaAviso":650},
       {"id":"C32-CANET-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5980,"lon":2.5850,"rumbo":225,"distanciaAviso":650},
@@ -401,8 +430,6 @@
       {"id":"N2-SANTAND-05","tipo":"fijo","icone":"📷","velMax":50,"lat":41.5620,"lon":2.5150,"rumbo":45,"distanciaAviso":350},
       {"id":"N2-CALELLA-06","tipo":"fijo","icone":"📷","velMax":80,"lat":41.6150,"lon":2.6580,"rumbo":225,"distanciaAviso":500},
       {"id":"N2-TORDERA-07","tipo":"fijo","icone":"📷","velMax":80,"lat":41.7050,"lon":2.7210,"rumbo":45,"distanciaAviso":600},
-
-      // 8. EIX DIAGONAL (C-15 Y C-37)
       {"id":"C15-VILA-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.2580,"lon":1.7050,"rumbo":330,"distanciaAviso":650},
       {"id":"C15-CANY-02","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2890,"lon":1.7120,"rumbo":345,"distanciaAviso":650},
       {"id":"C15-OLERD-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.3250,"lon":1.7080,"rumbo":165,"distanciaAviso":650},
@@ -415,8 +442,6 @@
       {"id":"C37-STSALV-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.7480,"lon":1.8520,"rumbo":220,"distanciaAviso":650},
       {"id":"C37-TORELLO-05","tipo":"tramo","icone":"⏱️","velMax":90,"lat":42.0620,"lon":2.3120,"rumbo":65,"distanciaAviso":650},
       {"id":"C37-BRACONS-06","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.1150,"lon":2.3950,"rumbo":65,"distanciaAviso":650},
-
-      // 9. AUTOPISTA AP-7 (EJE MEDITERRÁNEO COMPLETO SUR A NORTE)
       {"id":"AP7-AMPOSTA-01","tipo":"tramo","icone":"⏱️","velMax":120,"lat":40.6980,"lon":0.5750,"rumbo":35,"distanciaAviso":650},
       {"id":"AP7-ALDEA-02","tipo":"fijo","icone":"📷","velMax":120,"lat":40.7520,"lon":0.6120,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-AMETLLA-03","tipo":"fijo","icone":"📷","velMax":120,"lat":40.8920,"lon":0.7890,"rumbo":215,"distanciaAviso":650},
@@ -452,8 +477,6 @@
       {"id":"AP7-FIGUER-32","tipo":"fijo","icone":"📷","velMax":120,"lat":42.2710,"lon":2.9450,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-CAPMANY-33","tipo":"fijo","icone":"📷","velMax":120,"lat":42.3680,"lon":2.9150,"rumbo":355,"distanciaAviso":650},
       {"id":"AP7-JONQUERA-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
-
-      // 10. EIX C-17 (BARCELONA - VIC - RIPOLL)
       {"id":"C17-MONTC-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4880,"lon":2.1880,"rumbo":20,"distanciaAviso":500},
       {"id":"C17-LAFLOR-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5080,"lon":2.2020,"rumbo":200,"distanciaAviso":500},
       {"id":"C17-MOLLET-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5350,"lon":2.2150,"rumbo":200,"distanciaAviso":500},
@@ -471,8 +494,6 @@
       {"id":"C17-TORELLO-15","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0620,"lon":2.2750,"rumbo":195,"distanciaAviso":650},
       {"id":"C17-QUIRZE-16","tipo":"fijo","icone":"📷","velMax":90,"lat":42.1150,"lon":2.2280,"rumbo":15,"distanciaAviso":650},
       {"id":"C17-RIPOLL-17","tipo":"fijo","icone":"📷","velMax":90,"lat":42.1950,"lon":2.1880,"rumbo":10,"distanciaAviso":650},
-
-      // 11. EIX TRANSVERSAL C-25 (LLEIDA - CERVERA - MANRESA - VIC - GIRONA)
       {"id":"C25-CERV-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.6850,"lon":1.3120,"rumbo":85,"distanciaAviso":650},
       {"id":"C25-SANTRAM-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.7250,"lon":1.4850,"rumbo":265,"distanciaAviso":650},
       {"id":"C25-CALAF-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.7320,"lon":1.5280,"rumbo":85,"distanciaAviso":650},
@@ -490,8 +511,6 @@
       {"id":"C25-ARB-15","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8580,"lon":2.6150,"rumbo":90,"distanciaAviso":650},
       {"id":"C25-SANTACOL-16","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8550,"lon":2.6880,"rumbo":85,"distanciaAviso":650},
       {"id":"C25-RIUDEL-17","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8680,"lon":2.7650,"rumbo":265,"distanciaAviso":650},
-
-      // 12. GIRONA Y COSTA BRAVA (C-35, C-65, C-66, C-31 NORD, GI-682)
       {"id":"C35-LLINARS-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.6380,"lon":2.4120,"rumbo":55,"distanciaAviso":650},
       {"id":"C35-SANTCEL-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.6880,"lon":2.5120,"rumbo":235,"distanciaAviso":650},
       {"id":"C35-HOSTAL-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.7320,"lon":2.6250,"rumbo":55,"distanciaAviso":650},
@@ -510,8 +529,6 @@
       {"id":"C31-TORRO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":42.0350,"lon":3.1180,"rumbo":30,"distanciaAviso":500},
       {"id":"C31-VERGES-02","tipo":"fijo","icone":"📷","velMax":80,"lat":42.0650,"lon":3.0450,"rumbo":325,"distanciaAviso":500},
       {"id":"C31-VILAMAC-03","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2350,"lon":3.0120,"rumbo":20,"distanciaAviso":650},
-
-      // 13. SEGARRA, URGELL, PLA D'URGELL Y LLEIDA (A-2, LL-11, LL-12, A-22)
       {"id":"A2-PANIC-09","tipo":"fijo","icone":"📷","velMax":120,"lat":41.6210,"lon":1.4120,"rumbo":90,"distanciaAviso":650},
       {"id":"A2-CERVERA-10","tipo":"fijo","icone":"📷","velMax":120,"lat":41.6680,"lon":1.2720,"rumbo":265,"distanciaAviso":650},
       {"id":"A2-TARREGA-11","tipo":"fijo","icone":"📷","velMax":120,"lat":41.6520,"lon":1.1290,"rumbo":85,"distanciaAviso":650},
@@ -524,8 +541,6 @@
       {"id":"A22-ALMACEL-01","tipo":"fijo","icone":"📷","velMax":120,"lat":41.6850,"lon":0.4450,"rumbo":275,"distanciaAviso":650},
       {"id":"LL11-LLEIDA-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.6180,"lon":0.6650,"rumbo":260,"distanciaAviso":500},
       {"id":"LL12-LLEIDA-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5950,"lon":0.6280,"rumbo":185,"distanciaAviso":650},
-
-      // 14. EIX PIRINENC Y ACCESOS A ANDORRA (C-14, N-145, C-13, N-230, N-260)
       {"id":"C14-SALOU-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.0950,"lon":1.1350,"rumbo":345,"distanciaAviso":500},
       {"id":"C14-REUS-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.1780,"lon":1.1250,"rumbo":335,"distanciaAviso":650},
       {"id":"C14-ALCOVER-03","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2580,"lon":1.1820,"rumbo":155,"distanciaAviso":650},
@@ -554,8 +569,6 @@
       {"id":"C26-FORAD-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.8750,"lon":1.0150,"rumbo":75,"distanciaAviso":650},
       {"id":"C26-SOLSONA-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.9880,"lon":1.5050,"rumbo":255,"distanciaAviso":650},
       {"id":"C26-BERGA-04","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0950,"lon":1.8250,"rumbo":80,"distanciaAviso":650},
-
-      // 15. EIX DEL MEDI I BAIX EBRE (C-12, T-11, N-420, C-43, N-340 SUD, N-240)
       {"id":"C12-AMPOSTA-01","tipo":"fijo","icone":"📷","velMax":90,"lat":40.7180,"lon":0.5780,"rumbo":335,"distanciaAviso":650},
       {"id":"C12-TORTOSA-02","tipo":"fijo","icone":"📷","velMax":90,"lat":40.8350,"lon":0.5280,"rumbo":25,"distanciaAviso":650},
       {"id":"C12-ALDOVER-03","tipo":"fijo","icone":"📷","velMax":90,"lat":40.8850,"lon":0.5050,"rumbo":345,"distanciaAviso":650},
@@ -594,8 +607,6 @@
       {"id":"N240-VIMBODI-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4120,"lon":1.0450,"rumbo":325,"distanciaAviso":650},
       {"id":"N240-BORGES-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5210,"lon":0.8650,"rumbo":145,"distanciaAviso":650},
       {"id":"N240-JUNEDA-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5480,"lon":0.8250,"rumbo":325,"distanciaAviso":650},
-
-      // 16. EIX PIRINENC TRANSVERSAL (N-260) Y N-II EN GIRONA
       {"id":"N2-GIRONA-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.9580,"lon":2.8080,"rumbo":15,"distanciaAviso":650},
       {"id":"N2-MEDINYA-02","tipo":"fijo","icone":"📷","velMax":80,"lat":42.0480,"lon":2.8550,"rumbo":195,"distanciaAviso":650},
       {"id":"N2-BASCARE-03","tipo":"fijo","icone":"📷","velMax":80,"lat":42.1580,"lon":2.9120,"rumbo":195,"distanciaAviso":650},
@@ -628,6 +639,11 @@
 
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
+
+    // GESTIÓN DE LÍMITE DE VELOCIDAD DE LA VÍA
+    let limiteViaActual = null;
+    let ultimaConsultaLimite = 0;
+    let ultimoAvisoExceso = 0;
 
     function log(msg) {
       const box = document.getElementById("logBox");
@@ -720,7 +736,6 @@
       document.getElementById("radarAlertCard").style.display = "none";
     }
 
-    // GESTIÓN DE AVISOS ESCALONADOS AMPLIADOS (600m -> 250m -> 50m)
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
@@ -729,23 +744,53 @@
       const estado = avisosPorVoz[radar.id];
       const limiteTexto = typeof radar.velMax === 'number' ? `límite ${radar.velMax}` : 'precaución';
 
-      // 1. Primer aviso con amplio margen de seguridad (~600m)
       if (dist <= 620 && dist > 320 && !estado.fase600) {
         estado.fase600 = true;
         log(`VOZ: ${radar.tipo} a 600m`);
         locucion(`Atención, ${radar.tipo} a seiscientos metros, ${limiteTexto}`);
       }
-      // 2. Confirmación intermedia (~250m)
       else if (dist <= 270 && dist > 90 && !estado.fase250) {
         estado.fase250 = true;
         log(`VOZ: A 250 metros`);
         locucion(`A doscientos cincuenta metros`);
       }
-      // 3. Superado (~50m)
       else if (dist <= 50 && !estado.faseFin) {
         estado.faseFin = true;
         log(`VOZ: Punto de control`);
         locucion(`Punto de control`);
+      }
+    }
+
+    // CONSULTA DEL LÍMITE DE VELOCIDAD DE LA VÍA ACTUAL (OpenStreetMap / Overpass)
+    async function consultarLimiteVelocidadVia(lat, lon) {
+      const ahora = Date.now();
+      if (ahora - ultimaConsultaLimite < 20000) return;
+      ultimaConsultaLimite = ahora;
+
+      const delta = 0.0006;
+      const query = `[out:json][timeout:3];way["highway"]["maxspeed"](${lat-delta},${lon-delta},${lat+delta},${lon+delta});out tags;`;
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.elements && data.elements.length > 0) {
+            const rawSpeed = data.elements[0].tags.maxspeed;
+            const parsed = parseInt(rawSpeed, 10);
+            if (!isNaN(parsed)) {
+              limiteViaActual = parsed;
+              document.getElementById("roadSpeedLimit").innerText = limiteViaActual;
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        // Mantiene el último límite conocido si hay microcorte
       }
     }
 
@@ -798,11 +843,28 @@
       const vel = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
       const rumbo = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? Math.round(pos.coords.heading) : null;
 
-      document.getElementById("speedDisplay").innerText = vel;
+      const spdEl = document.getElementById("speedDisplay");
+      spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
+      // 1. Detección del límite de la vía actual
+      consultarLimiteVelocidadVia(lat, lon);
+
+      // Comprobación de exceso de velocidad
+      if (limiteViaActual && vel > limiteViaActual) {
+        spdEl.classList.add("danger");
+        if (vel >= limiteViaActual + 12 && Date.now() - ultimoAvisoExceso > 30000) {
+          ultimoAvisoExceso = Date.now();
+          locucion(`Exceso de velocidad, vía a ${limiteViaActual}`);
+        }
+      } else {
+        spdEl.classList.remove("danger");
+      }
+
+      // 2. Consulta de móviles Waze
       consultarAlertasWaze(lat, lon);
 
+      // 3. Verificación de radares cercanos
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
@@ -843,6 +905,7 @@
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             log("GPS: Posición fijada.");
+            consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude);
             consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
           },
           (err) => { log("GPS inicial: " + err.message); },
@@ -867,6 +930,7 @@
         document.getElementById("gpsStatus").style.color = "#ff9100";
         document.getElementById("speedDisplay").innerText = "0";
         document.getElementById("headingDisplay").innerText = "--";
+        document.getElementById("roadSpeedLimit").innerText = "--";
         btn.innerText = "ACTIVAR SISTEMA";
         btn.classList.remove("active");
         locucion("Avisador detenido.");
