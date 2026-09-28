@@ -46,8 +46,8 @@
       padding-top: 4px;
     }
     .brand-logo {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       filter: drop-shadow(0 0 8px rgba(255, 59, 48, 0.7));
       animation: pulsoRadar 2.5s infinite ease-in-out;
     }
@@ -62,7 +62,7 @@
       line-height: 1.1;
     }
     h1 {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 900;
       letter-spacing: 1.2px;
       color: #ffffff;
@@ -70,7 +70,7 @@
     }
     h1 span { color: #ff3b30; }
     .subhead {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: #00e676;
       font-weight: 700;
       letter-spacing: 0.8px;
@@ -84,10 +84,10 @@
       flex-direction: column;
       flex: 1;
       justify-content: space-between;
-      margin: 6px 0;
+      margin: 4px 0;
     }
 
-    /* BARRA DE POBLACIÓN ACTUAL */
+    /* BARRA DE POBLACIÓN */
     .location-bar {
       background: rgba(12, 14, 18, 0.85);
       border: 1px solid rgba(0, 230, 118, 0.25);
@@ -103,7 +103,6 @@
       text-transform: uppercase;
       letter-spacing: 0.8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-      margin-bottom: 2px;
     }
     .location-bar span.icon { font-size: 1rem; }
 
@@ -113,10 +112,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 4px 0 2px;
+      padding: 2px 0;
     }
     .speed-number {
-      font-size: 6rem;
+      font-size: 5.8rem;
       font-weight: 900;
       line-height: 0.9;
       color: #00e676;
@@ -127,12 +126,12 @@
     }
     .speed-number.danger {
       color: #ff3b30;
-      text-shadow: 0 0 30px rgba(255, 59, 48, 0.8);
-      animation: pulsoVelocidad 0.8s infinite alternate;
+      text-shadow: 0 0 35px rgba(255, 59, 48, 0.9);
+      animation: pulsoVelocidad 0.7s infinite alternate;
     }
     @keyframes pulsoVelocidad {
       from { transform: scale(1); }
-      to { transform: scale(1.04); }
+      to { transform: scale(1.06); }
     }
     .speed-unit {
       font-size: 0.95rem;
@@ -140,73 +139,81 @@
       color: #8c9ba5;
       letter-spacing: 2px;
       text-transform: uppercase;
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
-    /* TARJETA ALERTA RADAR O INCIDENCIA */
+    /* TARJETA DE ALERTA GIGANTE */
     .alert-card {
       display: none;
-      background: linear-gradient(145deg, #241111, #150a0a);
-      border: 2px solid #ff3b30;
-      border-radius: 14px;
-      padding: 8px 12px;
+      background: linear-gradient(145deg, #320f0f, #150505);
+      border: 3px solid #ff3b30;
+      border-radius: 18px;
+      padding: 10px 14px;
       text-align: center;
-      box-shadow: 0 0 20px rgba(255, 59, 48, 0.5);
-      animation: pulsoAlerta 1.2s infinite alternate;
-      margin-bottom: 6px;
+      box-shadow: 0 0 30px rgba(255, 59, 48, 0.7);
+      animation: pulsoAlerta 1s infinite alternate;
+      margin: 4px 0;
     }
     .alert-card.warning {
-      background: linear-gradient(145deg, #2a1f0a, #161105);
+      background: linear-gradient(145deg, #382405, #1c1102);
       border-color: #ff9100;
-      box-shadow: 0 0 20px rgba(255, 145, 0, 0.5);
+      box-shadow: 0 0 30px rgba(255, 145, 0, 0.7);
     }
     @keyframes pulsoAlerta {
-      from { border-color: #ff3b30; }
-      to { border-color: #ffffff; }
+      from { border-color: #ff3b30; transform: scale(0.98); }
+      to { border-color: #ffffff; transform: scale(1.01); }
     }
     .alert-top {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 18px;
+      gap: 20px;
     }
-    .traffic-sign {
-      width: 60px;
-      height: 60px;
+    .traffic-sign-alert {
+      width: 74px;
+      height: 74px;
       background-color: #ffffff;
-      border: 6px solid #d32f2f;
+      border: 7px solid #d32f2f;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.8);
+      flex-shrink: 0;
     }
-    .traffic-sign span {
+    .traffic-sign-alert span {
       color: #000000;
-      font-size: 1.6rem;
+      font-size: 2rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
-    .radar-icon-box { font-size: 2.3rem; line-height: 1; }
+    .radar-icon-box { 
+      font-size: 3rem; 
+      line-height: 1; 
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+    }
     .radar-info-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #ffffff;
       text-transform: uppercase;
-      margin-top: 2px;
+      letter-spacing: 1px;
+      margin-top: 4px;
     }
     .radar-info-dist {
-      font-size: 1.3rem;
+      font-size: 1.6rem;
       color: #00e676;
-      font-weight: 800;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
     }
 
-    /* PESTAÑA / BOTÓN DE CONTROL DE FATIGA */
+    /* PESTAÑA CONTROL FATIGA */
     .fatiga-toggle-bar {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-bottom: 6px;
+      margin: 2px 0 4px;
     }
     .fatiga-btn {
       background: rgba(30, 35, 42, 0.9);
@@ -236,7 +243,7 @@
       background: rgba(22, 25, 30, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
-      padding: 10px 12px;
+      padding: 8px 12px;
       text-align: center;
       backdrop-filter: blur(10px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
@@ -246,9 +253,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .submetric {
       display: flex;
@@ -257,24 +264,24 @@
       flex: 1;
     }
     .submetric .val {
-      font-size: 1.8rem;
+      font-size: 1.7rem;
       font-weight: 900;
       color: #00e676;
       line-height: 1.1;
     }
     .submetric .lbl {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: #8c9ba5;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-top: 3px;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
       font-weight: 700;
     }
 
-    /* SEÑAL LÍMITE DE VÍA */
+    /* CHAPA LÍMITE DE VÍA */
     .speed-limit-badge {
-      width: 50px;
-      height: 50px;
+      width: 46px;
+      height: 46px;
       background-color: #ffffff;
       border: 5px solid #d32f2f;
       border-radius: 50%;
@@ -285,26 +292,26 @@
     }
     .speed-limit-badge span {
       color: #000000;
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* MÓDULO DEL CLIMA */
+    /* MÓDULO CLIMA */
     .weather-box {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      height: 50px;
+      height: 46px;
     }
     .weather-icon {
-      font-size: 2.2rem;
+      font-size: 2rem;
       line-height: 1;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
     .weather-temp {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: 900;
       color: #ffffff;
     }
@@ -314,7 +321,7 @@
     }
 
     .status-row {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: #8c9ba5;
       margin: 1px 0;
       display: flex;
@@ -325,14 +332,14 @@
       background: #08090b;
       border: 1px solid #1c2229;
       border-radius: 8px;
-      height: 44px;
+      height: 40px;
       padding: 4px 8px;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: #9ab0c2;
       overflow-y: auto;
       text-align: left;
       font-family: monospace;
-      margin-top: 5px;
+      margin-top: 4px;
       line-height: 1.2;
     }
 
@@ -350,7 +357,7 @@
       letter-spacing: 0.8px;
       flex-shrink: 0;
       box-shadow: 0 4px 15px rgba(255, 59, 48, 0.35);
-      margin-top: 6px;
+      margin-top: 5px;
     }
     .btn-action.active {
       background: linear-gradient(135deg, #2b3038 0%, #1e2227 100%);
@@ -384,7 +391,7 @@
 
   <div class="main-content">
     
-    <!-- POBLACIÓN DETECTADA EN TIEMPO REAL -->
+    <!-- BARRA POBLACIÓN -->
     <div class="location-bar">
       <span class="icon">📍</span>
       <span id="cityName">BUSCANDO ZONA...</span>
@@ -396,19 +403,19 @@
       <div class="speed-unit">km/h</div>
     </div>
 
-    <!-- TARJETA ALERTA RADAR / RETENCIÓN -->
+    <!-- TARJETA ALERTA RADAR / RETENCIÓN EN GRAN FORMATO -->
     <div class="alert-card" id="radarAlertCard">
       <div class="alert-top">
         <div class="radar-icon-box" id="alertIcon">📷</div>
-        <div class="traffic-sign" id="alertTrafficSign">
+        <div class="traffic-sign-alert" id="alertTrafficSign">
           <span id="alertSpeedSign">--</span>
         </div>
       </div>
-      <div class="radar-info-title" id="alertTypeTitle">RADAR</div>
+      <div class="radar-info-title" id="alertTypeTitle">RADAR FIJO</div>
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- BOTÓN / PESTAÑA TOGGLE CONTROL DE FATIGA (DESACTIVADO SIEMPRE POR DEFECTO) -->
+    <!-- PESTAÑA CONTROL DE FATIGA (DESACTIVADO SIEMPRE POR DEFECTO) -->
     <div class="fatiga-toggle-bar">
       <button type="button" class="fatiga-btn" id="fatigaToggleBtn" onclick="toggleFatiga()">
         <span>☕</span>
@@ -416,7 +423,7 @@
       </button>
     </div>
 
-    <!-- CAJA INFERIOR: LÍMITE + CLIMA + RUMBO -->
+    <!-- CAJA INFERIOR -->
     <div class="panel-bottom">
       <div class="metric-subgroup">
         
@@ -809,9 +816,9 @@
     let ultimaConsultaCiudad = 0;
     let ultimaCiudadDetectada = "";
 
-    // SEGURIDAD VIAL: HIELO, RETENCIONES Y CONTROL DE FATIGA OPCIONAL
+    // SEGURIDAD: HIELO Y FATIGA
     let ultimoAvisoHielo = 0;
-    let fatigaActiva = false; // SIEMPRE DESACTIVADO POR DEFECTO
+    let fatigaActiva = false;
     let tiempoConduciendoMs = 0;
     let ultimoTimestampGPS = 0;
     let tiempoParadoMs = 0;
@@ -833,7 +840,6 @@
       }
     }
 
-    // BOTÓN TOGGLE MANUAL CONTROL FATIGA
     function toggleFatiga() {
       fatigaActiva = !fatigaActiva;
       const btn = document.getElementById("fatigaToggleBtn");
@@ -918,6 +924,7 @@
       return diff <= TOLERANCIA_RUMBO;
     }
 
+    // PANTALLA GIGANTE DE ALERTA VISUAL
     function mostrarAlertaVisual(radar, distancia, esIncidencia = false) {
       const card = document.getElementById("radarAlertCard");
       const sign = document.getElementById("alertTrafficSign");
@@ -969,7 +976,6 @@
       }
     }
 
-    // MONITORIZACIÓN DE FATIGA (SOLO SI EL USUARIO LO ACTIVÓ)
     function monitorizarFatiga(velActual) {
       if (!fatigaActiva) return;
 
@@ -987,13 +993,12 @@
         tiempoParadoMs = 0;
       } else {
         tiempoParadoMs += delta;
-        if (tiempoParadoMs > 480000) { // Si descansa 8 min, reinicia
+        if (tiempoParadoMs > 480000) {
           tiempoConduciendoMs = 0;
           avisoFatigaEmitido = false;
         }
       }
 
-      // Alerta a la 1h 45m (6.300.000 ms)
       if (tiempoConduciendoMs >= 6300000 && !avisoFatigaEmitido) {
         avisoFatigaEmitido = true;
         locucion("Llevas casi dos horas de ruta continua. Recomendado realizar una parada para descansar e hidratarse.");
@@ -1193,16 +1198,13 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // 1. Control de fatiga (si está encendido)
+      // Control fatiga, límites, población y clima
       monitorizarFatiga(vel);
-
-      // 2. Población y Límite
       consultarPoblacionActual(lat, lon);
       consultarLimiteVelocidadVia(lat, lon, vel);
-
-      // 3. Clima y Hielo
       consultarClimaRuta(lat, lon);
 
+      // ALERTA VISUAL EN VELOCÍMETRO POR EXCESO DE VELOCIDAD
       if (limiteViaActual && vel > limiteViaActual) {
         spdEl.classList.add("danger");
         if (vel >= limiteViaActual + 12 && Date.now() - ultimoAvisoExceso > 30000) {
@@ -1213,13 +1215,14 @@
         spdEl.classList.remove("danger");
       }
 
-      // 4. Waze (Radares e Incidencias)
+      // Consulta Waze
       consultarAlertasWaze(lat, lon);
 
       let alertaActiva = null;
       let distanciaMinima = Infinity;
       let esIncidencia = false;
 
+      // 1. Detección de retenciones
       incidenciasWazeActivas.forEach(inc => {
         const dist = calcularDistancia(lat, lon, inc.lat, inc.lon);
         if (dist <= 800 && coincideSentido(rumbo, inc.rumbo)) {
@@ -1236,6 +1239,7 @@
         }
       });
 
+      // 2. Detección de radares
       const todosLosRadares = [...baseRadares, ...radaresWazeActivos];
       todosLosRadares.forEach(radar => {
         const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
@@ -1261,6 +1265,7 @@
         }
       });
 
+      // MOSTRAR O ESCONDER EL HUD GRANDE
       if (alertaActiva) {
         mostrarAlertaVisual(alertaActiva, distanciaMinima, esIncidencia);
       } else {
