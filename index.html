@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Avisador de Radares - Cataluña Pro</title>
 
-  <!-- SOPORTE PWA PARA INSTALACIÓN COMO APP EN ANDROID -->
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ff3b30">
   <meta name="mobile-web-app-capable" content="yes">
@@ -323,10 +323,11 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // PISTA DE AUDIO REAL EN SILENCIO (WAV 1s LOOP) PARA MANTENER LA CPU Y GPS ACTIVOS EN EL BOLSILLO
+    // PISTA DE AUDIO REAL PARA CPU/GPS ACTIVO EN SEGUNDO PLANO
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
+    // BASE COMPLETA CATALUÑA
     const baseRadares = [
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":450},
       {"id":"BCN-B20-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":450},
@@ -647,11 +648,18 @@
     let watchId = null;
     let wakeLock = null;
     const avisosPorVoz = {};
-    const TOLERANCIA_RUMBO = 45;
+
+    // PARÁMETRO ESTRICTO DE SENTIDO: Cono cerrado de 35 grados (elimina sentido opuesto)
+    const TOLERANCIA_RUMBO = 35;
 
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
 
+    // MEMORIA DE POSICIÓN PREVIA PARA CÁLCULO VECTORIAL REAL
+    let posAnterior = null;
+    let historialDistancias = {};
+
+    // GESTIÓN DE LÍMITE DE VELOCIDAD
     let limiteViaActual = null;
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
@@ -677,9 +685,9 @@
         audioSilencioso.play().then(() => {
           document.getElementById("bgStatus").innerText = "Activo (Audio vivo)";
           document.getElementById("bgStatus").style.color = "#00e676";
-          log("Segundo plano: blindado con audio.");
+          log("Segundo plano: audio activo.");
         }).catch(() => {
-          log("Pulsa la pantalla para autorizar audio.");
+          log("Toca la pantalla para autorizar audio.");
         });
 
         if ('mediaSession' in navigator) {
@@ -707,6 +715,7 @@
       document.getElementById("bgStatus").style.color = "#8c9ba5";
     }
 
+    // DISTANCIA HAVERSINE DE ALTA PRECISIÓN (EN METROS)
     function calcularDistancia(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -717,8 +726,19 @@
       return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
+    // CÁLCULO DE RUMBO GEODÉSICO REAL ENTRE DOS PUNTOS GPS (Fórmula de azimut)
+    function calcularRumboVectorial(lat1, lon1, lat2, lon2) {
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+      let brng = Math.atan2(y, x) * 180 / Math.PI;
+      return (brng + 360) % 360;
+    }
+
+    // COMPROBACIÓN ESTRICTA DE SENTIDO DE LA MARCHA
     function coincideSentido(rumboMoto, rumboRadar) {
-      if (rumboRadar === null || rumboRadar === undefined || isNaN(rumboMoto)) return true;
+      if (rumboRadar === null || rumboRadar === undefined || rumboMoto === null || isNaN(rumboMoto)) return true;
       let diff = Math.abs(rumboMoto - rumboRadar) % 360;
       if (diff > 180) diff = 360 - diff;
       return diff <= TOLERANCIA_RUMBO;
@@ -762,13 +782,13 @@
       }
     }
 
-    // CONSULTA DEL LÍMITE DE VELOCIDAD CON FILTRO INTELIGENTE
+    // CONSULTA DEL LÍMITE DE VELOCIDAD CON FILTRADO DE CALZADA PRINCIPAL
     async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
       const ahora = Date.now();
       if (ahora - ultimaConsultaLimite < 15000) return;
       ultimaConsultaLimite = ahora;
 
-      const delta = 0.0005;
+      const delta = 0.00045; // Radio estrecho (~40 metros)
       const query = `[out:json][timeout:3];way["highway"]["maxspeed"](${lat-delta},${lon-delta},${lat+delta},${lon+delta});out tags;`;
       const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
@@ -800,6 +820,7 @@
             for (const via of vias) {
               const spd = parseInt(via.tags.maxspeed, 10);
               if (!isNaN(spd)) {
+                // Si la moto va a velocidad de autovía (>65 km/h), ignora las vías de 50 pegadas a la calzada
                 if (velActual > 65 && spd <= 50 && vias.length > 1) {
                   continue;
                 }
@@ -813,7 +834,7 @@
       } catch (e) {}
     }
 
-    // CONSULTA AUTOMÁTICA A WAZE VÍA CLOUDFLARE
+    // CONSULTA AUTOMÁTICA WAZE
     async function consultarAlertasWaze(lat, lon, forzar = false) {
       if (!URL_PROXY_WAZE) return;
 
@@ -860,12 +881,26 @@
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
       const vel = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
-      const rumbo = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? Math.round(pos.coords.heading) : null;
+      
+      // FILTRO VECTORIAL DE RUMBO:
+      // Si la moto está en marcha (>12 km/h), calculamos el rumbo por coordenadas consecutivas
+      let rumbo = null;
+      if (posAnterior && vel > 12) {
+        const distMov = calcularDistancia(posAnterior.lat, posAnterior.lon, lat, lon);
+        if (distMov > 4) { // Evita micro-oscilaciones del GPS en parado
+          rumbo = Math.round(calcularRumboVectorial(posAnterior.lat, posAnterior.lon, lat, lon));
+        }
+      }
+      if (rumbo === null && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+        rumbo = Math.round(pos.coords.heading);
+      }
+      posAnterior = { lat, lon };
 
       const spdEl = document.getElementById("speedDisplay");
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
+      // 1. Detección de límite por jerarquía vial
       consultarLimiteVelocidadVia(lat, lon, vel);
 
       if (limiteViaActual && vel > limiteViaActual) {
@@ -878,8 +913,10 @@
         spdEl.classList.remove("danger");
       }
 
+      // 2. Consulta de móviles Waze
       consultarAlertasWaze(lat, lon);
 
+      // 3. Verificación de proximidad con filtro de acercamiento
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
@@ -890,15 +927,26 @@
         const radioAviso = radar.distanciaAviso || 600;
 
         if (dist <= radioAviso) {
+          // Comprobación de sentido estricto (35°)
           if (coincideSentido(rumbo, radar.rumbo)) {
+            // Filtro de aproximación: verifica que la distancia esté reduciéndose (no alejándose)
+            const distPrevia = historialDistancias[radar.id] || Infinity;
+            historialDistancias[radar.id] = dist;
+
+            // Si se está alejando y ya está a más de 60m, descarta aviso
+            if (dist > distPrevia + 15 && dist > 60) {
+              return;
+            }
+
             if (dist < distanciaMinima) {
               distanciaMinima = dist;
               radarActivo = radar;
             }
             gestionarVozEscalonada(radar, dist);
           }
-        } else if (dist > radioAviso * 1.5) {
+        } else if (dist > radioAviso * 1.4) {
           if (avisosPorVoz[radar.id]) delete avisosPorVoz[radar.id];
+          if (historialDistancias[radar.id]) delete historialDistancias[radar.id];
         }
       });
 
@@ -914,19 +962,22 @@
 
       if (watchId === null) {
         activarAudioSegundoPlano();
-        locucion("Avisador de radares activado. Segundo plano habilitado.");
+        locucion("Avisador de radares activado. Precisión máxima habilitada.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
+        // Posicionamiento de máxima precisión directa
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            log("GPS: Posición fijada.");
+            log("GPS: Posición de alta precisión fijada.");
+            posAnterior = { lat: pos.coords.latitude, lon: pos.coords.longitude };
             consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
             consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
           },
           (err) => { log("GPS inicial: " + err.message); },
-          { enableHighAccuracy: true, timeout: 7000 }
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
         );
 
+        // Rastreo continuo sin caché (maximumAge: 0)
         watchId = navigator.geolocation.watchPosition(
           procesarGPS,
           (err) => { log("Error GPS: " + err.message); },
@@ -935,10 +986,11 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("GPS y segundo plano activos.");
+        log("GPS de alta precisión activo.");
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
+        posAnterior = null;
         desactivarAudioSegundoPlano();
         ocultarAlertaVisual();
         document.getElementById("gpsStatus").innerText = "Detenido";
