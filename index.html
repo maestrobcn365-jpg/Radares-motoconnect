@@ -262,9 +262,11 @@
 
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
-    const URL_GENCAT_SCT = "https://analisi.transparenciacatalunya.cat/resource/53v5-ghkg.json?$limit=3000";
+    
+    // URL con proxy CORS integrado para evitar el bloqueo en GitHub Pages
+    const URL_GENCAT_SCT = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://analisi.transparenciacatalunya.cat/resource/53v5-ghkg.json?$limit=3000");
 
-    // Base fallback para túneles y puntos críticos urbanos de Barcelona
+    // Respaldo urbano prioritario (puntos clave de acceso a Barcelona)
     const baseUrbanaFija = [
       {"id":"BCN-C31-TR-INI","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4415,"lon":2.2312,"rumbo":225,"distanciaAviso":650},
       {"id":"BCN-C31-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4230,"lon":2.2110,"rumbo":225,"distanciaAviso":650},
@@ -305,7 +307,7 @@
       }
     }
 
-    // --- DESCARGA OFICIAL GENCAT (SCT) ---
+    // --- CARGA DE LA BASE OFICIAL (GENCAT VÍA PROXY CORS) ---
     async function cargarBaseOficialGencat() {
       try {
         log("Conectando con Dades Obertes Gencat...");
@@ -325,25 +327,26 @@
               velMax: vel,
               lat: lat,
               lon: lon,
-              rumbo: null, // Sin rumbo para no descartar radares por desvío de sensor
+              rumbo: null,
               distanciaAviso: vel >= 100 ? 650 : 450
             };
           }).filter(r => !isNaN(r.lat) && !isNaN(r.lon));
 
-          document.getElementById("dbStatus").innerText = `${baseRadaresGencat.length + baseUrbanaFija.length} radares (Online)`;
+          const total = baseRadaresGencat.length + baseUrbanaFija.length;
+          document.getElementById("dbStatus").innerText = `${total} radares (Gencat)`;
           document.getElementById("dbStatus").style.color = "#00e676";
           log(`Gencat: ${baseRadaresGencat.length} radares oficiales cargados.`);
         } else {
           throw new Error("HTTP " + res.status);
         }
       } catch (e) {
-        log("Fallo Gencat: usando respaldo local urbano.");
+        log("Fallo Gencat: usando respaldo local.");
         document.getElementById("dbStatus").innerText = `${baseUrbanaFija.length} radares (Respaldo)`;
         document.getElementById("dbStatus").style.color = "#ff9100";
       }
     }
 
-    // --- CONEXIÓN BLE ESP32 ---
+    // --- CONEXIÓN BLUETOOTH LE (ESP32) ---
     async function conectarPantallaBLE() {
       try {
         log("Buscando pantalla BLE...");
@@ -369,7 +372,7 @@
         document.getElementById("bleStatus").style.color = "#00e676";
         document.getElementById("bleBtn").innerText = "DISPLAY CONECTADO";
         document.getElementById("bleBtn").classList.add("connected");
-        log("Display redondo conectado por BLE.");
+        log("Display conectado por BLE.");
       } catch (error) {
         log("Error BLE: " + error.message);
       }
@@ -387,7 +390,7 @@
       bleCharacteristic.writeValue(encoder.encode(payload)).catch(()=>{});
     }
 
-    // --- CAPA DINÁMICA: WAZE ---
+    // --- CAPA WAZE DINÁMICA ---
     async function consultarWazeDinamico(lat, lon, forzar = false) {
       if (!URL_PROXY_WAZE) return;
       const ahora = Date.now();
@@ -399,7 +402,6 @@
         if (res.ok) {
           const alertas = await res.json();
           if (Array.isArray(alertas)) {
-            // Filtrar únicamente los móviles reportados por la comunidad
             radaresWazeActivos = alertas.map(a => ({
               ...a,
               tipo: a.tipo || "móvil",
@@ -411,12 +413,12 @@
           }
         }
       } catch (e) {
-        document.getElementById("wazeStatus").innerText = "Sin cobertura o límite";
+        document.getElementById("wazeStatus").innerText = "Sin respuesta";
         document.getElementById("wazeStatus").style.color = "#ff9100";
       }
     }
 
-    // --- CONSULTA LÍMITE DE LA VÍA (OSM / OVERPASS) ---
+    // --- LÍMITE DE LA VÍA (OPENSTREETMAP / OVERPASS) ---
     async function consultarLimiteViaOSM(lat, lon) {
       const ahora = Date.now();
       if (ahora - ultimaConsultaVia < 15000) return;
@@ -455,7 +457,7 @@
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
             title: "Avisador Híbrido Activo",
-            artist: "Cataluña Completa Oficial + Waze",
+            artist: "Cataluña Oficial + Waze",
             album: "Cataluña Pro"
           });
           navigator.mediaSession.playbackState = "playing";
@@ -488,13 +490,12 @@
     }
 
     function coincideSentido(rumboMoto, rumboRadar) {
-      // Si el radar no tiene rumbo exacto definido, avisar siempre por seguridad
       if (rumboRadar === null || rumboRadar === undefined || rumboMoto === null || isNaN(rumboMoto)) {
         return true;
       }
       let diff = Math.abs(rumboMoto - rumboRadar) % 360;
       if (diff > 180) diff = 360 - diff;
-      return diff <= 65; // Tolerancia amplia de 65°
+      return diff <= 65;
     }
 
     function mostrarAlertaVisual(radar, distancia) {
@@ -547,7 +548,6 @@
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
-      // Capa Fija Oficial + Respaldo Urbano + Capa Dinámica Waze
       const todosLosRadares = [...baseRadaresGencat, ...baseUrbanaFija, ...radaresWazeActivos];
 
       todosLosRadares.forEach(radar => {
@@ -581,9 +581,8 @@
 
       if (watchId === null) {
         activarAudioSegundoPlano();
-        locucion("Sistema activo con base oficial de Cataluña y móviles Waze.");
+        locucion("Avisador de radares activado.");
         
-        // Bloqueo de pantalla encendida para que Android no apague el GPS
         if ('wakeLock' in navigator) {
           navigator.wakeLock.request('screen').catch(()=>{});
         }
