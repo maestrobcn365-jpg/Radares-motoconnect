@@ -41,13 +41,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       width: 100%;
       padding-top: 4px;
     }
     .brand-logo {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       filter: drop-shadow(0 0 8px rgba(255, 59, 48, 0.7));
       animation: pulsoRadar 2.5s infinite ease-in-out;
     }
@@ -62,7 +62,7 @@
       line-height: 1.1;
     }
     h1 {
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 900;
       letter-spacing: 1.2px;
       color: #ffffff;
@@ -70,14 +70,13 @@
     }
     h1 span { color: #ff3b30; }
     .subhead {
-      font-size: 0.6rem;
+      font-size: 0.65rem;
       color: #00e676;
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
     }
 
-    /* CONTENEDOR PRINCIPAL VERTICAL */
     .main-content {
       width: 100%;
       max-width: 380px;
@@ -88,16 +87,36 @@
       margin: 6px 0;
     }
 
-    /* VELOCÍMETRO GIGANTE EN LA PARTE SUPERIOR */
+    /* BARRA DE POBLACIÓN ACTUAL */
+    .location-bar {
+      background: rgba(12, 14, 18, 0.85);
+      border: 1px solid rgba(0, 230, 118, 0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #e0f2fe;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      margin-bottom: 2px;
+    }
+    .location-bar span.icon { font-size: 1rem; }
+
+    /* VELOCÍMETRO GIGANTE */
     .speedometer-hero {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 0 4px;
+      padding: 6px 0 2px;
     }
     .speed-number {
-      font-size: 5.6rem;
+      font-size: 6rem;
       font-weight: 900;
       line-height: 0.9;
       color: #00e676;
@@ -116,7 +135,7 @@
       to { transform: scale(1.04); }
     }
     .speed-unit {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 800;
       color: #8c9ba5;
       letter-spacing: 2px;
@@ -124,7 +143,7 @@
       margin-top: 4px;
     }
 
-    /* TARJETA DE ALERTA DE RADAR */
+    /* TARJETA ALERTA RADAR */
     .alert-card {
       display: none;
       background: linear-gradient(145deg, #241111, #150a0a);
@@ -147,8 +166,8 @@
       gap: 18px;
     }
     .traffic-sign {
-      width: 58px;
-      height: 58px;
+      width: 60px;
+      height: 60px;
       background-color: #ffffff;
       border: 6px solid #d32f2f;
       border-radius: 50%;
@@ -159,30 +178,30 @@
     }
     .traffic-sign span {
       color: #000000;
-      font-size: 1.55rem;
+      font-size: 1.6rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
-    .radar-icon-box { font-size: 2.2rem; line-height: 1; }
+    .radar-icon-box { font-size: 2.3rem; line-height: 1; }
     .radar-info-title {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: #fff;
       text-transform: uppercase;
       margin-top: 2px;
     }
     .radar-info-dist {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       color: #00e676;
       font-weight: 800;
     }
 
-    /* CAJA SECUNDARIA COLOCADA ABAJO */
+    /* CAJA INFERIOR */
     .panel-bottom {
-      background: rgba(22, 25, 30, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(22, 25, 30, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
-      padding: 8px 12px;
+      padding: 10px 12px;
       text-align: center;
       backdrop-filter: blur(10px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
@@ -190,21 +209,21 @@
 
     .metric-subgroup {
       display: flex;
-      justify-content: space-around;
+      justify-content: space-between;
       align-items: center;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       margin-bottom: 6px;
     }
     .submetric {
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 90px;
+      flex: 1;
     }
     .submetric .val {
       font-size: 1.8rem;
-      font-weight: 800;
+      font-weight: 900;
       color: #00e676;
       line-height: 1.1;
     }
@@ -212,14 +231,15 @@
       font-size: 0.65rem;
       color: #8c9ba5;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 2px;
+      letter-spacing: 0.6px;
+      margin-top: 3px;
+      font-weight: 700;
     }
 
-    /* CHAPA SEÑAL LÍMITE DE LA VÍA */
+    /* SEÑAL LÍMITE DE VÍA */
     .speed-limit-badge {
-      width: 44px;
-      height: 44px;
+      width: 50px;
+      height: 50px;
       background-color: #ffffff;
       border: 5px solid #d32f2f;
       border-radius: 50%;
@@ -230,9 +250,28 @@
     }
     .speed-limit-badge span {
       color: #000000;
-      font-size: 1.25rem;
+      font-size: 1.45rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
+    }
+
+    /* MÓDULO DEL CLIMA CON ICONO Y NÚMERO MÁS GRANDE */
+    .weather-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 50px;
+    }
+    .weather-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .weather-temp {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #ffffff;
     }
 
     .status-row {
@@ -247,7 +286,7 @@
       background: #08090b;
       border: 1px solid #1c2229;
       border-radius: 8px;
-      height: 46px;
+      height: 44px;
       padding: 4px 8px;
       font-size: 0.65rem;
       color: #9ab0c2;
@@ -306,13 +345,19 @@
 
   <div class="main-content">
     
-    <!-- VELOCÍMETRO ARRIBA Y GIGANTE -->
+    <!-- POBLACIÓN DETECTADA EN TIEMPO REAL -->
+    <div class="location-bar">
+      <span class="icon">📍</span>
+      <span id="cityName">BUSCANDO ZONA...</span>
+    </div>
+
+    <!-- VELOCÍMETRO GIGANTE -->
     <div class="speedometer-hero">
       <div class="speed-number" id="speedDisplay">0</div>
       <div class="speed-unit">km/h</div>
     </div>
 
-    <!-- TARJETA RADAR (APARECE EN EL CENTRO SI HAY ALERTA) -->
+    <!-- TARJETA ALERTA RADAR -->
     <div class="alert-card" id="radarAlertCard">
       <div class="alert-top">
         <div class="radar-icon-box" id="alertIcon">📷</div>
@@ -324,9 +369,11 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- CAJA BAJADA ABAJO CON LÍMITE DE VÍA, RUMBO Y ESTADO -->
+    <!-- CAJA INFERIOR: LÍMITE + CLIMA + RUMBO -->
     <div class="panel-bottom">
       <div class="metric-subgroup">
+        
+        <!-- 1. LÍMITE DE VÍA -->
         <div class="submetric">
           <div class="speed-limit-badge">
             <span id="roadSpeedLimit">--</span>
@@ -334,10 +381,21 @@
           <span class="lbl">Límite Vía</span>
         </div>
 
+        <!-- 2. CLIMA EN RUTA (ICONO Y TEMPERATURA AMPLIADOS) -->
+        <div class="submetric">
+          <div class="weather-box">
+            <span class="weather-icon" id="weatherIcon">☀️</span>
+            <span class="weather-temp" id="weatherTemp">--°</span>
+          </div>
+          <span class="lbl">Clima Ruta</span>
+        </div>
+
+        <!-- 3. RUMBO -->
         <div class="submetric">
           <span class="val" id="headingDisplay">--</span>
           <span class="lbl">Rumbo (°)</span>
         </div>
+
       </div>
       
       <div class="status-row">
@@ -699,6 +757,13 @@
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
 
+    // GESTIÓN DEL CLIMA CADA 5 MINUTOS Y POBLACIÓN EN RUTA
+    let ultimaConsultaClima = 0;
+    let ultimaPosClima = null;
+    let ultimoAvisoLluvia = 0;
+    let ultimaConsultaCiudad = 0;
+    let ultimaCiudadDetectada = "";
+
     function log(msg) {
       const box = document.getElementById("logBox");
       box.innerHTML += `<br>> ${msg}`;
@@ -814,6 +879,82 @@
       }
     }
 
+    function traducirCodigoClima(code, esNoche = false) {
+      if (code === 0) return esNoche ? "🌙" : "☀️";
+      if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
+      if (code === 3) return "☁️";
+      if ([45, 48].includes(code)) return "🌫️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
+      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+      if ([95, 96, 99].includes(code)) return "⛈️";
+      return "⛅";
+    }
+
+    // 1. CONSULTA DE POBLACIÓN EXACTA (REVERSE GEOCODING NOMINATIM / OSM)
+    async function consultarPoblacionActual(lat, lon, forzar = false) {
+      const ahora = Date.now();
+      if (!forzar && ahora - ultimaConsultaCiudad < 45000) return;
+      ultimaConsultaCiudad = ahora;
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+        const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.address) {
+            const addr = data.address;
+            const ciudad = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || "Cataluña";
+            
+            if (ciudad !== ultimaCiudadDetectada) {
+              ultimaCiudadDetectada = ciudad;
+              document.getElementById("cityName").innerText = ciudad;
+              log(`Entrando en: ${ciudad}`);
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. CONSULTA DEL TIEMPO CADA 5 MINUTOS (OPEN-METEO EXACTO)
+    async function consultarClimaRuta(lat, lon, forzar = false) {
+      const ahora = Date.now();
+      let distDesdeUltima = Infinity;
+      if (ultimaPosClima) {
+        distDesdeUltima = calcularDistancia(ultimaPosClima.lat, ultimaPosClima.lon, lat, lon);
+      }
+
+      // Exactamente cada 5 minutos (300.000 ms) o tras desplazarse más de 6 km
+      if (!forzar && (ahora - ultimaConsultaClima < 300000) && distDesdeUltima < 6000) return;
+      ultimaConsultaClima = ahora;
+      ultimaPosClima = { lat, lon };
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,is_day,weather_code&timezone=auto`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.current) {
+            const temp = Math.round(data.current.temperature_2m);
+            const code = data.current.weather_code;
+            const esNoche = data.current.is_day === 0;
+
+            const icon = traducirCodigoClima(code, esNoche);
+            document.getElementById("weatherIcon").innerText = icon;
+            document.getElementById("weatherTemp").innerText = `${temp}°`;
+
+            log(`Clima (5 min): ${temp}°C ${icon}`);
+
+            // Aviso por voz si entra lluvia o tormenta
+            if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code) && ahora - ultimoAvisoLluvia > 900000) {
+              ultimoAvisoLluvia = ahora;
+              locucion("Atención en ruta, zona con lluvia");
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
     async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
       const ahora = Date.now();
       if (ahora - ultimaConsultaLimite < 15000) return;
@@ -871,8 +1012,6 @@
       if (!forzar && (ahora - ultimaActualizacionWaze < 45000)) return;
       ultimaActualizacionWaze = ahora;
 
-      log("Waze: Sincronizando alertas...");
-
       try {
         const res = await fetch(`${URL_PROXY_WAZE}?lat=${lat}&lon=${lon}`);
         if (res.ok) {
@@ -886,12 +1025,8 @@
               log(`Waze: Conectado (0 móviles en tu zona).`);
             }
           }
-        } else {
-          log(`Waze: Respuesta ${res.status}`);
         }
-      } catch (e) {
-        log(`Waze: Error de red`);
-      }
+      } catch (e) {}
     }
 
     function actualizarEstadoContador() {
@@ -927,7 +1062,14 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
+      // 1. Población en tiempo real
+      consultarPoblacionActual(lat, lon);
+
+      // 2. Límite de vía
       consultarLimiteVelocidadVia(lat, lon, vel);
+
+      // 3. Clima en ruta cada 5 minutos
+      consultarClimaRuta(lat, lon);
 
       if (limiteViaActual && vel > limiteViaActual) {
         spdEl.classList.add("danger");
@@ -939,6 +1081,7 @@
         spdEl.classList.remove("danger");
       }
 
+      // 4. Radares Waze y fijos
       consultarAlertasWaze(lat, lon);
 
       let radarActivo = null;
@@ -983,14 +1126,16 @@
 
       if (watchId === null) {
         activarAudioSegundoPlano();
-        locucion("Avisador de radares activado. Precisión máxima habilitada.");
+        locucion("Avisador de radares activado. Precisión máxima, clima y población habilitados.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             log("GPS: Posición de alta precisión fijada.");
             posAnterior = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            consultarPoblacionActual(pos.coords.latitude, pos.coords.longitude, true);
             consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
+            consultarClimaRuta(pos.coords.latitude, pos.coords.longitude, true);
             consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
           },
           (err) => { log("GPS inicial: " + err.message); },
@@ -1017,6 +1162,8 @@
         document.getElementById("speedDisplay").innerText = "0";
         document.getElementById("headingDisplay").innerText = "--";
         document.getElementById("roadSpeedLimit").innerText = "--";
+        document.getElementById("weatherTemp").innerText = "--°";
+        document.getElementById("cityName").innerText = "SISTEMA EN ESPERA";
         btn.innerText = "ACTIVAR SISTEMA";
         btn.classList.remove("active");
         locucion("Avisador detenido.");
