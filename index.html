@@ -34,7 +34,7 @@
       color: #888;
     }
 
-    /* CONTENEDOR CENTRAL FLEXIBLE */
+    /* CONTENEDOR CENTRAL */
     .main-content {
       width: 100%;
       max-width: 380px;
@@ -46,7 +46,7 @@
       margin: 6px 0;
     }
 
-    /* TARJETA DE ALERTA DINÁMICA COMPACTA */
+    /* TARJETA DINÁMICA DE ALERTA */
     .alert-card {
       display: none;
       background: #1f1212;
@@ -69,7 +69,7 @@
       gap: 18px;
     }
 
-    /* SEÑAL DE TRÁFICO REDONDA OFICIAL */
+    /* SEÑAL DE TRÁFICO */
     .traffic-sign {
       width: 62px;
       height: 62px;
@@ -106,7 +106,7 @@
       font-weight: 800;
     }
 
-    /* PANEL PRINCIPAL DE INSTRUMENTOS */
+    /* PANEL PRINCIPAL */
     .panel {
       background: #181818;
       border: 1px solid #282828;
@@ -187,7 +187,7 @@
   </header>
 
   <div class="main-content">
-    <!-- PANEL DE AVISO VISUAL COMPACTO -->
+    <!-- AVISO VISUAL -->
     <div class="alert-card" id="radarAlertCard">
       <div class="alert-top">
         <div class="radar-icon-box" id="alertIcon">📷</div>
@@ -199,7 +199,7 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- PANEL DE VELOCIDAD Y ESTADO -->
+    <!-- PANEL DE CONTROL -->
     <div class="panel">
       <div class="metric-group">
         <div class="metric">
@@ -232,8 +232,8 @@
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
 
   <script>
-    // URL DE TU WORKER DE CLOUDFLARE (Cambia esta URL por la tuya cuando la tengas)
-    const URL_PROXY_WAZE = "https://waze-radar-proxy.tu-usuario.workers.dev";
+    // TU WORKER DE CLOUDFLARE CONECTADO A WAZE
+    const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
     // BASE INTEGRAL DE CATALUÑA
     const baseRadares = [
@@ -518,7 +518,7 @@
     const avisosPorVoz = {};
     const TOLERANCIA_RUMBO = 45;
 
-    // INTEGRACIÓN TIEMPO REAL (WAZE LIVE POLICE)
+    // INTEGRACIÓN WAZE
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
 
@@ -538,7 +538,7 @@
       }
     }
 
-    // AUDIO INAUDIBLE PARA SEGUNDO PLANO
+    // AUDIO DE FONDO
     function activarAudioSegundoPlano() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -564,7 +564,7 @@
         document.getElementById("bgStatus").style.color = "#00e676";
         log("Segundo plano activado.");
       } catch (e) {
-        log("Audio segundo plano no iniciado.");
+        log("Audio de segundo plano restringido.");
       }
     }
 
@@ -614,7 +614,7 @@
       document.getElementById("radarAlertCard").style.display = "none";
     }
 
-    // AVISOS ESCALONADOS (300m -> 150m -> Rebasado)
+    // GESTIÓN DE AVISOS ESCALONADOS
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase300: false, fase150: false, faseFin: false };
@@ -640,9 +640,9 @@
       }
     }
 
-    // CONSULTA PERIÓDICA A WAZE VÍA CLOUDFLARE
+    // CONSULTA AUTOMÁTICA A WAZE VÍA CLOUDFLARE
     async function consultarAlertasWaze(lat, lon) {
-      if (!URL_PROXY_WAZE || URL_PROXY_WAZE.includes("tu-usuario")) return;
+      if (!URL_PROXY_WAZE) return;
 
       const ahora = Date.now();
       if (ahora - ultimaActualizacionWaze < 60000) return;
@@ -656,12 +656,12 @@
             radaresWazeActivos = alertas;
             actualizarEstadoContador();
             if (alertas.length > 0) {
-              log(`Waze: ${alertas.length} móviles activos cerca.`);
+              log(`Waze: ${alertas.length} móviles reportados cerca.`);
             }
           }
         }
       } catch (e) {
-        // En caso de fallo de red, se mantiene la base sin interrumpir
+        // Red no disponible momentáneamente
       }
     }
 
@@ -686,13 +686,13 @@
       document.getElementById("speedDisplay").innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // Búsqueda en vivo de alertas de Waze en tu área
+      // Petición a Waze en segundo plano
       consultarAlertasWaze(lat, lon);
 
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
-      // Lista combinada: Base de Cataluña + Móviles de Waze
+      // Combinación: Fijos de Cataluña + Móviles en vivo
       const todosLosRadares = [...baseRadares, ...radaresWazeActivos];
 
       todosLosRadares.forEach(radar => {
