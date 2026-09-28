@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Radar Moto BT</title>
+  <title>Avisador de Radares</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
       height: 100dvh;
-      overflow: hidden; /* Elimina cualquier barra de desplazamiento */
+      overflow: hidden;
       background-color: #0d0d0d;
       color: #f0f0f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -25,10 +25,11 @@
       text-align: center;
     }
     h1 {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       color: #ff3b30;
       letter-spacing: 0.5px;
       line-height: 1.2;
+      text-transform: uppercase;
     }
     .subhead {
       font-size: 0.72rem;
@@ -183,7 +184,7 @@
 <body>
 
   <header>
-    <h1>RADAR MOTO BT</h1>
+    <h1>AVISADOR DE RADARES</h1>
     <div class="subhead">Audio BT: X10 / CAR-KIT</div>
   </header>
 
@@ -547,7 +548,7 @@
 
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
-            title: "Radar Moto Activo",
+            title: "Avisador de Radares Activo",
             artist: "Avisos por voz X10 / CAR-KIT",
             album: "Cataluña Pro"
           });
@@ -677,7 +678,7 @@
 
       if (watchId === null) {
         activarAudioSegundoPlano();
-        locucion("Sistema activado. Segundo plano habilitado.");
+        locucion("Avisador de radares activado. Segundo plano habilitado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
         watchId = navigator.geolocation.watchPosition(
@@ -700,7 +701,7 @@
         document.getElementById("headingDisplay").innerText = "--";
         btn.innerText = "ACTIVAR SISTEMA";
         btn.classList.remove("active");
-        locucion("Sistema detenido.");
+        locucion("Avisador detenido.");
       }
     }
 
