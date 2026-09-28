@@ -34,19 +34,20 @@
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 14px 14px;
+      padding: 8px 14px 14px;
     }
 
     header {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin-top: 2px;
+      gap: 8px;
+      width: 100%;
+      padding-top: 4px;
     }
     .brand-logo {
-      width: 36px;
-      height: 36px;
+      width: 28px;
+      height: 28px;
       filter: drop-shadow(0 0 8px rgba(255, 59, 48, 0.7));
       animation: pulsoRadar 2.5s infinite ease-in-out;
     }
@@ -61,33 +62,69 @@
       line-height: 1.1;
     }
     h1 {
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: 900;
       letter-spacing: 1.2px;
       color: #ffffff;
       text-transform: uppercase;
-      text-shadow: 0 0 10px rgba(255, 59, 48, 0.4);
     }
     h1 span { color: #ff3b30; }
     .subhead {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: #00e676;
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
     }
 
+    /* CONTENEDOR PRINCIPAL VERTICAL */
     .main-content {
       width: 100%;
       max-width: 380px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
       flex: 1;
-      justify-content: center;
-      margin: 4px 0;
+      justify-content: space-between;
+      margin: 6px 0;
     }
 
+    /* VELOCÍMETRO GIGANTE EN LA PARTE SUPERIOR */
+    .speedometer-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0 4px;
+    }
+    .speed-number {
+      font-size: 5.6rem;
+      font-weight: 900;
+      line-height: 0.9;
+      color: #00e676;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 25px rgba(0, 230, 118, 0.45);
+      letter-spacing: -2px;
+      transition: color 0.2s ease, text-shadow 0.2s ease;
+    }
+    .speed-number.danger {
+      color: #ff3b30;
+      text-shadow: 0 0 30px rgba(255, 59, 48, 0.8);
+      animation: pulsoVelocidad 0.8s infinite alternate;
+    }
+    @keyframes pulsoVelocidad {
+      from { transform: scale(1); }
+      to { transform: scale(1.04); }
+    }
+    .speed-unit {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #8c9ba5;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* TARJETA DE ALERTA DE RADAR */
     .alert-card {
       display: none;
       background: linear-gradient(145deg, #241111, #150a0a);
@@ -97,24 +134,23 @@
       text-align: center;
       box-shadow: 0 0 20px rgba(255, 59, 48, 0.5);
       animation: pulsoAlerta 1.2s infinite alternate;
+      margin-bottom: 6px;
     }
     @keyframes pulsoAlerta {
       from { border-color: #ff3b30; }
       to { border-color: #ffffff; }
     }
-
     .alert-top {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 18px;
     }
-
     .traffic-sign {
-      width: 62px;
-      height: 62px;
+      width: 58px;
+      height: 58px;
       background-color: #ffffff;
-      border: 7px solid #d32f2f;
+      border: 6px solid #d32f2f;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -123,68 +159,67 @@
     }
     .traffic-sign span {
       color: #000000;
-      font-size: 1.65rem;
+      font-size: 1.55rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
-
-    .radar-icon-box { font-size: 2.4rem; line-height: 1; }
+    .radar-icon-box { font-size: 2.2rem; line-height: 1; }
     .radar-info-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: bold;
       color: #fff;
       text-transform: uppercase;
-      margin-top: 3px;
+      margin-top: 2px;
     }
     .radar-info-dist {
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       color: #00e676;
       font-weight: 800;
     }
 
-    .panel {
-      background: rgba(22, 25, 30, 0.85);
+    /* CAJA SECUNDARIA COLOCADA ABAJO */
+    .panel-bottom {
+      background: rgba(22, 25, 30, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 10px 14px;
+      padding: 8px 12px;
       text-align: center;
       backdrop-filter: blur(10px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     }
-    .metric-group {
+
+    .metric-subgroup {
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
       align-items: center;
-      margin-bottom: 8px;
-      padding: 0 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 6px;
     }
-    .metric {
+    .submetric {
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 75px;
+      min-width: 90px;
     }
-    .metric .val {
-      font-size: 2.1rem;
+    .submetric .val {
+      font-size: 1.8rem;
       font-weight: 800;
       color: #00e676;
       line-height: 1.1;
-      text-shadow: 0 0 12px rgba(0, 230, 118, 0.35);
     }
-    .metric .val.danger {
-      color: #ff3b30;
-      text-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
-    }
-    .metric .lbl {
+    .submetric .lbl {
       font-size: 0.65rem;
       color: #8c9ba5;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      margin-top: 2px;
     }
 
+    /* CHAPA SEÑAL LÍMITE DE LA VÍA */
     .speed-limit-badge {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       background-color: #ffffff;
       border: 5px solid #d32f2f;
       border-radius: 50%;
@@ -192,19 +227,18 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.7);
-      margin-bottom: 2px;
     }
     .speed-limit-badge span {
       color: #000000;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
 
     .status-row {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       color: #8c9ba5;
-      margin: 2px 0;
+      margin: 1px 0;
       display: flex;
       justify-content: space-between;
     }
@@ -213,15 +247,15 @@
       background: #08090b;
       border: 1px solid #1c2229;
       border-radius: 8px;
-      height: 52px;
-      padding: 5px 8px;
-      font-size: 0.68rem;
+      height: 46px;
+      padding: 4px 8px;
+      font-size: 0.65rem;
       color: #9ab0c2;
       overflow-y: auto;
       text-align: left;
       font-family: monospace;
-      margin-top: 6px;
-      line-height: 1.25;
+      margin-top: 5px;
+      line-height: 1.2;
     }
 
     .btn-action {
@@ -238,6 +272,7 @@
       letter-spacing: 0.8px;
       flex-shrink: 0;
       box-shadow: 0 4px 15px rgba(255, 59, 48, 0.35);
+      margin-top: 6px;
     }
     .btn-action.active {
       background: linear-gradient(135deg, #2b3038 0%, #1e2227 100%);
@@ -270,6 +305,14 @@
   </header>
 
   <div class="main-content">
+    
+    <!-- VELOCÍMETRO ARRIBA Y GIGANTE -->
+    <div class="speedometer-hero">
+      <div class="speed-number" id="speedDisplay">0</div>
+      <div class="speed-unit">km/h</div>
+    </div>
+
+    <!-- TARJETA RADAR (APARECE EN EL CENTRO SI HAY ALERTA) -->
     <div class="alert-card" id="radarAlertCard">
       <div class="alert-top">
         <div class="radar-icon-box" id="alertIcon">📷</div>
@@ -281,21 +324,17 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <div class="panel">
-      <div class="metric-group">
-        <div class="metric">
-          <span class="val" id="speedDisplay">0</span>
-          <span class="lbl">km/h</span>
-        </div>
-        
-        <div class="metric">
+    <!-- CAJA BAJADA ABAJO CON LÍMITE DE VÍA, RUMBO Y ESTADO -->
+    <div class="panel-bottom">
+      <div class="metric-subgroup">
+        <div class="submetric">
           <div class="speed-limit-badge">
             <span id="roadSpeedLimit">--</span>
           </div>
           <span class="lbl">Límite Vía</span>
         </div>
 
-        <div class="metric">
+        <div class="submetric">
           <span class="val" id="headingDisplay">--</span>
           <span class="lbl">Rumbo (°)</span>
         </div>
@@ -316,6 +355,7 @@
 
       <div class="log-box" id="logBox">> Base lista. Pulsa Activar Sistema.</div>
     </div>
+
   </div>
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
@@ -323,11 +363,9 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // PISTA DE AUDIO REAL PARA CPU/GPS ACTIVO EN SEGUNDO PLANO
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // BASE COMPLETA CATALUÑA
     const baseRadares = [
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":450},
       {"id":"BCN-B20-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":450},
@@ -649,17 +687,14 @@
     let wakeLock = null;
     const avisosPorVoz = {};
 
-    // PARÁMETRO ESTRICTO DE SENTIDO: Cono cerrado de 35 grados (elimina sentido opuesto)
     const TOLERANCIA_RUMBO = 35;
 
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
 
-    // MEMORIA DE POSICIÓN PREVIA PARA CÁLCULO VECTORIAL REAL
     let posAnterior = null;
     let historialDistancias = {};
 
-    // GESTIÓN DE LÍMITE DE VELOCIDAD
     let limiteViaActual = null;
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
@@ -715,7 +750,6 @@
       document.getElementById("bgStatus").style.color = "#8c9ba5";
     }
 
-    // DISTANCIA HAVERSINE DE ALTA PRECISIÓN (EN METROS)
     function calcularDistancia(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -726,7 +760,6 @@
       return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
-    // CÁLCULO DE RUMBO GEODÉSICO REAL ENTRE DOS PUNTOS GPS (Fórmula de azimut)
     function calcularRumboVectorial(lat1, lon1, lat2, lon2) {
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
@@ -736,7 +769,6 @@
       return (brng + 360) % 360;
     }
 
-    // COMPROBACIÓN ESTRICTA DE SENTIDO DE LA MARCHA
     function coincideSentido(rumboMoto, rumboRadar) {
       if (rumboRadar === null || rumboRadar === undefined || rumboMoto === null || isNaN(rumboMoto)) return true;
       let diff = Math.abs(rumboMoto - rumboRadar) % 360;
@@ -782,13 +814,12 @@
       }
     }
 
-    // CONSULTA DEL LÍMITE DE VELOCIDAD CON FILTRADO DE CALZADA PRINCIPAL
     async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
       const ahora = Date.now();
       if (ahora - ultimaConsultaLimite < 15000) return;
       ultimaConsultaLimite = ahora;
 
-      const delta = 0.00045; // Radio estrecho (~40 metros)
+      const delta = 0.00045;
       const query = `[out:json][timeout:3];way["highway"]["maxspeed"](${lat-delta},${lon-delta},${lat+delta},${lon+delta});out tags;`;
       const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
@@ -820,7 +851,6 @@
             for (const via of vias) {
               const spd = parseInt(via.tags.maxspeed, 10);
               if (!isNaN(spd)) {
-                // Si la moto va a velocidad de autovía (>65 km/h), ignora las vías de 50 pegadas a la calzada
                 if (velActual > 65 && spd <= 50 && vias.length > 1) {
                   continue;
                 }
@@ -834,7 +864,6 @@
       } catch (e) {}
     }
 
-    // CONSULTA AUTOMÁTICA WAZE
     async function consultarAlertasWaze(lat, lon, forzar = false) {
       if (!URL_PROXY_WAZE) return;
 
@@ -882,12 +911,10 @@
       const lon = pos.coords.longitude;
       const vel = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
       
-      // FILTRO VECTORIAL DE RUMBO:
-      // Si la moto está en marcha (>12 km/h), calculamos el rumbo por coordenadas consecutivas
       let rumbo = null;
       if (posAnterior && vel > 12) {
         const distMov = calcularDistancia(posAnterior.lat, posAnterior.lon, lat, lon);
-        if (distMov > 4) { // Evita micro-oscilaciones del GPS en parado
+        if (distMov > 4) {
           rumbo = Math.round(calcularRumboVectorial(posAnterior.lat, posAnterior.lon, lat, lon));
         }
       }
@@ -900,7 +927,6 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // 1. Detección de límite por jerarquía vial
       consultarLimiteVelocidadVia(lat, lon, vel);
 
       if (limiteViaActual && vel > limiteViaActual) {
@@ -913,10 +939,8 @@
         spdEl.classList.remove("danger");
       }
 
-      // 2. Consulta de móviles Waze
       consultarAlertasWaze(lat, lon);
 
-      // 3. Verificación de proximidad con filtro de acercamiento
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
@@ -927,13 +951,10 @@
         const radioAviso = radar.distanciaAviso || 600;
 
         if (dist <= radioAviso) {
-          // Comprobación de sentido estricto (35°)
           if (coincideSentido(rumbo, radar.rumbo)) {
-            // Filtro de aproximación: verifica que la distancia esté reduciéndose (no alejándose)
             const distPrevia = historialDistancias[radar.id] || Infinity;
             historialDistancias[radar.id] = dist;
 
-            // Si se está alejando y ya está a más de 60m, descarta aviso
             if (dist > distPrevia + 15 && dist > 60) {
               return;
             }
@@ -965,7 +986,6 @@
         locucion("Avisador de radares activado. Precisión máxima habilitada.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
-        // Posicionamiento de máxima precisión directa
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             log("GPS: Posición de alta precisión fijada.");
@@ -977,7 +997,6 @@
           { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
         );
 
-        // Rastreo continuo sin caché (maximumAge: 0)
         watchId = navigator.geolocation.watchPosition(
           procesarGPS,
           (err) => { log("Error GPS: " + err.message); },
