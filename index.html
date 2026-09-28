@@ -35,6 +35,33 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 14px 14px;
+      position: relative;
+    }
+
+    /* BANNER EMERGENTE SUPERIOR */
+    .toast-alert {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 28, 18, 0.95);
+      border: 2px solid #00e676;
+      border-radius: 30px;
+      padding: 7px 18px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #00e676;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      box-shadow: 0 4px 20px rgba(0, 230, 118, 0.45);
+      z-index: 9999;
+      animation: fadeInDown 0.3s ease;
+      white-space: nowrap;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translate(-50%, -15px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
     }
 
     header {
@@ -368,6 +395,9 @@
 </head>
 <body>
 
+  <!-- BANNER EMERGENTE SUPERIOR -->
+  <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
+
   <header>
     <svg class="brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="46" stroke="#ff3b30" stroke-width="4" stroke-opacity="0.4"/>
@@ -415,7 +445,7 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- PESTAÑA CONTROL DE FATIGA (DESACTIVADO SIEMPRE POR DEFECTO) -->
+    <!-- PESTAÑA CONTROL DE FATIGA -->
     <div class="fatiga-toggle-bar">
       <button type="button" class="fatiga-btn" id="fatigaToggleBtn" onclick="toggleFatiga()">
         <span>☕</span>
@@ -840,6 +870,42 @@
       }
     }
 
+    // DISPARADOR DE NOTIFICACIÓN SUPERIOR (BANNER + ANDROID)
+    function lanzarNotificacionSuperior() {
+      // 1. Banner flotante en pantalla
+      const banner = document.getElementById("toastBanner");
+      banner.style.display = "block";
+      setTimeout(() => {
+        banner.style.display = "none";
+      }, 4000);
+
+      // 2. Tarjeta en la barra de Android
+      if ('Notification' in window) {
+        Notification.requestPermission().then((perm) => {
+          if (perm === 'granted' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then((reg) => {
+              reg.showNotification("Avisador de Radares ACTIVO", {
+                body: "Protección en ruta activa • Audio y GPS en segundo plano",
+                icon: "https://cdn-icons-png.flaticon.com/192/854/854878.png",
+                tag: "radar-status",
+                silent: true
+              });
+            });
+          }
+        });
+      }
+    }
+
+    function cerrarNotificacionAndroid() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.getNotifications({ tag: "radar-status" }).then((nots) => {
+            nots.forEach(n => n.close());
+          });
+        });
+      }
+    }
+
     function toggleFatiga() {
       fatigaActiva = !fatigaActiva;
       const btn = document.getElementById("fatigaToggleBtn");
@@ -1138,7 +1204,6 @@
       } catch (e) {}
     }
 
-    // CONSULTA AUTOMÁTICA WAZE CON REGISTRO DE MENSAJES RESTAURADO
     async function consultarAlertasWaze(lat, lon, forzar = false) {
       if (!URL_PROXY_WAZE) return;
 
@@ -1217,13 +1282,11 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // Control fatiga, límites, población y clima
       monitorizarFatiga(vel);
       consultarPoblacionActual(lat, lon);
       consultarLimiteVelocidadVia(lat, lon, vel);
       consultarClimaRuta(lat, lon);
 
-      // ALERTA VISUAL EN VELOCÍMETRO POR EXCESO DE VELOCIDAD
       if (limiteViaActual && vel > limiteViaActual) {
         spdEl.classList.add("danger");
         if (vel >= limiteViaActual + 12 && Date.now() - ultimoAvisoExceso > 30000) {
@@ -1234,14 +1297,12 @@
         spdEl.classList.remove("danger");
       }
 
-      // Consulta Waze periódica
       consultarAlertasWaze(lat, lon);
 
       let alertaActiva = null;
       let distanciaMinima = Infinity;
       let esIncidencia = false;
 
-      // 1. Detección de retenciones
       incidenciasWazeActivas.forEach(inc => {
         const dist = calcularDistancia(lat, lon, inc.lat, inc.lon);
         if (dist <= 800 && coincideSentido(rumbo, inc.rumbo)) {
@@ -1258,7 +1319,6 @@
         }
       });
 
-      // 2. Detección de radares
       const todosLosRadares = [...baseRadares, ...radaresWazeActivos];
       todosLosRadares.forEach(radar => {
         const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
@@ -1284,7 +1344,6 @@
         }
       });
 
-      // MOSTRAR O ESCONDER EL HUD GRANDE
       if (alertaActiva) {
         mostrarAlertaVisual(alertaActiva, distanciaMinima, esIncidencia);
       } else {
@@ -1297,6 +1356,7 @@
 
       if (watchId === null) {
         activarAudioSegundoPlano();
+        lanzarNotificacionSuperior();
         tiempoConduciendoMs = 0;
         tiempoParadoMs = 0;
         avisoFatigaEmitido = false;
@@ -1305,7 +1365,6 @@
         locucion("Avisador activado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
-        // 1. Forzar primera llamada a Waze y servicios con la posición actual
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             log("GPS: Posición fijada.");
@@ -1319,7 +1378,6 @@
           { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
         );
 
-        // 2. Rastreo GPS continuo
         watchId = navigator.geolocation.watchPosition(
           procesarGPS,
           (err) => { log("Error GPS: " + err.message); },
@@ -1334,6 +1392,7 @@
         watchId = null;
         posAnterior = null;
         desactivarAudioSegundoPlano();
+        cerrarNotificacionAndroid();
         ocultarAlertaVisual();
         document.getElementById("gpsStatus").innerText = "Detenido";
         document.getElementById("gpsStatus").style.color = "#ff9100";
