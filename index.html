@@ -127,7 +127,6 @@
       font-weight: 800;
     }
 
-    /* INSTRUMENTAL DE TRES RELOJES: VELOCIDAD - LÍMITE VÍA - RUMBO */
     .panel {
       background: rgba(22, 25, 30, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -168,7 +167,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* CHAPA MINIATURA SEÑAL LÍMITE DE LA VÍA */
     .speed-limit-badge {
       width: 48px;
       height: 48px;
@@ -268,7 +266,6 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- PANEL INSTRUMENTOS -->
     <div class="panel">
       <div class="metric-group">
         <div class="metric">
@@ -276,7 +273,6 @@
           <span class="lbl">km/h</span>
         </div>
         
-        <!-- INDICADOR LÍMITE DE LA VÍA -->
         <div class="metric">
           <div class="speed-limit-badge">
             <span id="roadSpeedLimit">--</span>
@@ -312,7 +308,6 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // BASE COMPLETA CATALUÑA
     const baseRadares = [
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":450},
       {"id":"BCN-B20-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":450},
@@ -640,7 +635,7 @@
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
 
-    // GESTIÓN DE LÍMITE DE VELOCIDAD DE LA VÍA
+    // GESTIÓN DE LÍMITE DE VELOCIDAD CON FILTRO INTELIGENTE
     let limiteViaActual = null;
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
@@ -761,13 +756,13 @@
       }
     }
 
-    // CONSULTA DEL LÍMITE DE VELOCIDAD DE LA VÍA ACTUAL (OpenStreetMap / Overpass)
-    async function consultarLimiteVelocidadVia(lat, lon) {
+    // CONSULTA DEL LÍMITE DE VELOCIDAD CON PRIORIZACIÓN DE TRONCO CENTRAL
+    async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
       const ahora = Date.now();
-      if (ahora - ultimaConsultaLimite < 20000) return;
+      if (ahora - ultimaConsultaLimite < 15000) return;
       ultimaConsultaLimite = ahora;
 
-      const delta = 0.0006;
+      const delta = 0.0005;
       const query = `[out:json][timeout:3];way["highway"]["maxspeed"](${lat-delta},${lon-delta},${lat+delta},${lon+delta});out tags;`;
       const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
@@ -780,17 +775,37 @@
         if (res.ok) {
           const data = await res.json();
           if (data && data.elements && data.elements.length > 0) {
-            const rawSpeed = data.elements[0].tags.maxspeed;
-            const parsed = parseInt(rawSpeed, 10);
-            if (!isNaN(parsed)) {
-              limiteViaActual = parsed;
-              document.getElementById("roadSpeedLimit").innerText = limiteViaActual;
-              return;
+            const jerarquia = {
+              'motorway': 10,
+              'trunk': 9,
+              'primary': 8,
+              'secondary': 7,
+              'tertiary': 6,
+              'residential': 2,
+              'service': 1
+            };
+
+            const vias = data.elements.sort((a, b) => {
+              const pesoA = jerarquia[a.tags.highway] || 3;
+              const pesoB = jerarquia[b.tags.highway] || 3;
+              return pesoB - pesoA;
+            });
+
+            for (const via of vias) {
+              const spd = parseInt(via.tags.maxspeed, 10);
+              if (!isNaN(spd)) {
+                if (velActual > 65 && spd <= 50 && vias.length > 1) {
+                  continue;
+                }
+                limiteViaActual = spd;
+                document.getElementById("roadSpeedLimit").innerText = limiteViaActual;
+                return;
+              }
             }
           }
         }
       } catch (e) {
-        // Mantiene el último límite conocido si hay microcorte
+        // Mantiene el último límite válido en caso de error
       }
     }
 
@@ -847,10 +862,9 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // 1. Detección del límite de la vía actual
-      consultarLimiteVelocidadVia(lat, lon);
+      // Límite de vía pasando velocidad actual para evitar conflicto con laterales
+      consultarLimiteVelocidadVia(lat, lon, vel);
 
-      // Comprobación de exceso de velocidad
       if (limiteViaActual && vel > limiteViaActual) {
         spdEl.classList.add("danger");
         if (vel >= limiteViaActual + 12 && Date.now() - ultimoAvisoExceso > 30000) {
@@ -861,10 +875,8 @@
         spdEl.classList.remove("danger");
       }
 
-      // 2. Consulta de móviles Waze
       consultarAlertasWaze(lat, lon);
 
-      // 3. Verificación de radares cercanos
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
@@ -905,7 +917,7 @@
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             log("GPS: Posición fijada.");
-            consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude);
+            consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
             consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
           },
           (err) => { log("GPS inicial: " + err.message); },
