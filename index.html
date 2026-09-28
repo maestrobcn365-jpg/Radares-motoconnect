@@ -1073,7 +1073,7 @@
     let ultimoPuntoGrabadoMs = 0;
     let rutaPendienteGuardar = null;
 
-    // --- PROTECCIÓN 1: BLOQUEO DE SALIDA ACCIDENTAL (DESEA SALIR) ---
+    // PROTECCIÓN DE CIERRE ACCIDENTAL
     window.addEventListener("beforeunload", (e) => {
       if (watchId !== null || (rutaEnCurso && rutaEnCurso.distanciaMetros > 100)) {
         e.preventDefault();
@@ -1082,28 +1082,522 @@
       }
     });
 
-    // AUTO-GUARDADO DE EMERGENCIA EN CALIENTE
     function autoGuardarRutaEnCaliente() {
-      if (rutaEnCurso && rutaEnCurso.distanciaMetros > 50) {
-        localStorage.setItem("ruta_activa_recuperable", JSON.stringify(rutaEnCurso));
-      }
+      try {
+        if (rutaEnCurso && rutaEnCurso.distanciaMetros > 50) {
+          localStorage.setItem("ruta_activa_recuperable", JSON.stringify(rutaEnCurso));
+        }
+      } catch(e){}
     }
 
-    // --- PROTECCIÓN 2: RECUPERAR RUTA SI SE CERRÓ LA APP POR ERROR ---
     function comprobarRutaRecuperable() {
-      const rutaRecuperadaStr = localStorage.getItem("ruta_activa_recuperable");
-      if (rutaRecuperadaStr) {
-        try {
+      try {
+        const rutaRecuperadaStr = localStorage.getItem("ruta_activa_recuperable");
+        if (rutaRecuperadaStr) {
           const ruta = JSON.parse(rutaRecuperadaStr);
           if (ruta && ruta.distanciaMetros > 100 && ruta.puntos && ruta.puntos.length > 0) {
-            document.getElementById("modalResumenTitulo").innerText = "⚠️ Ruta recuperada tras cierre";
+            const titEl = document.getElementById("modalResumenTitulo");
+            if (titEl) titEl.innerText = "⚠️ Ruta recuperada tras cierre";
             mostrarModalResumen(ruta);
           } else {
             localStorage.removeItem("ruta_activa_recuperable");
           }
-        } catch(e) {
+        }
+      } catch(e) {
+        localStorage.removeItem("ruta_activa_recuperable");
+      }
+    }
+
+    function toggleSistema() {
+      const btn = document.getElementById("mainBtn");
+      if (!btn) return;
+
+      if (watchId === null) {
+        // 1. ACTIVAR
+        activarAudioSegundoPlano();
+        lanzarNotificacionSuperior();
+        tiempoConduciendoMs = 0;
+        tiempoParadoMs = 0;
+        avisoFatigaEmitido = false;
+        ultimoTimestampGPS = Date.now();
+
+        rutaEnCurso = {
+          inicioMs: Date.now(),
+          finMs: 0,
+          distanciaMetros: 0,
+          velocidadMax: 0,
+          puntos: [],
+          ciudadOrigen: ultimaCiudadDetectada || "",
+          ciudadDestino: ""
+        };
+        ultimoPuntoGrabadoMs = Date.now();
+        localStorage.removeItem("ruta_activa_recuperable");
+
+        locucion("Avisador activado.");
+        if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
+
+        // Verificación de disponibilidad de GPS
+        if (!navigator.geolocation) {
+          log("Error: Tu navegador no soporta geolocalización.");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            log("GPS: Posición fijada.");
+            posAnterior = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            rutaEnCurso.puntos.push({ lat: Number(pos.coords.latitude.toFixed(5)), lon: Number(pos.coords.longitude.toFixed(5)), vel: 0, time: Date.now() });
+            consultarPoblacionActual(pos.coords.latitude, pos.coords.longitude, true);
+            consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
+            consultarClimaRuta(pos.coords.latitude, pos.coords.longitude, true);
+            consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
+          },
+          (err) => { log("GPS inicial: " + err.message); },
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+        );
+
+        watchId = navigator.geolocation.watchPosition(
+          procesarGPS,
+          (err) => { log("Error GPS: " + err.message); },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+
+        btn.innerText = "DETENER SISTEMA";
+        btn.classList.add("active");
+        log("Sistema, GPS y telemetría de ruta activos.");
+      } else {
+        // 2. DETENER
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        posAnterior = null;
+        desactivarAudioSegundoPlano();
+        cerrarNotificacionAndroid();
+        ocultarAlertaVisual();
+        document.getElementById("gpsStatus").innerText = "Detenido";
+        document.getElementById("gpsStatus").style.color = "#ff9100";
+        document.getElementById("speedDisplay").innerText = "0";
+        document.getElementById("headingDisplay").innerText = "--";
+        document.getElementById("roadSpeedLimit").innerText = "--";
+        document.getElementById("weatherTemp").innerText = "--°";
+        document.getElementById("cityName").innerText = "SISTEMA EN ESPERA";
+        btn.innerText = "ACTIVAR SISTEMA";
+        btn.classList.remove("active");
+        locucion("Avisador detenido.");
+
+        rutaEnCurso.finMs = Date.now();
+        if (rutaEnCurso.distanciaMetros > 100) {
+          const titEl = document.getElementById("modalResumenTitulo");
+          if (titEl) titEl.innerText = "🏁 Resumen de la Ruta";
+          mostrarModalResumen(rutaEnCurso);
+        } else {
           localStorage.removeItem("ruta_activa_recuperable");
         }
+      }
+    }
+
+    function log(msg) {
+      const box = document.getElementById("logBox");
+      if (box) {
+        box.innerHTML += `<br>> ${msg}`;
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    function locucion(texto) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const voz = new SpeechSynthesisUtterance(texto);
+        voz.lang = 'es-ES';
+        voz.rate = 1.1;
+        window.speechSynthesis.speak(voz);
+      }
+    }
+
+    function lanzarNotificacionSuperior() {
+      const banner = document.getElementById("toastBanner");
+      if (banner) {
+        banner.style.display = "block";
+        setTimeout(() => { banner.style.display = "none"; }, 4000);
+      }
+
+      if ('Notification' in window) {
+        Notification.requestPermission().then((perm) => {
+          if (perm === 'granted' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then((reg) => {
+              reg.showNotification("Avisador de Radares ACTIVO", {
+                body: "Protección en ruta activa • Pulsa para volver a la app",
+                icon: "https://cdn-icons-png.flaticon.com/192/854/854878.png",
+                tag: "radar-status",
+                renotify: false,
+                requireInteraction: true,
+                silent: true,
+                actions: [
+                  { action: 'desactivar', title: '⏹️ Desactivar' }
+                ]
+              });
+            });
+          }
+        });
+      }
+    }
+
+    function cerrarNotificacionAndroid() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.getNotifications({ tag: "radar-status" }).then((nots) => {
+            nots.forEach(n => n.close());
+          });
+        });
+      }
+    }
+
+    function toggleFatiga() {
+      fatigaActiva = !fatigaActiva;
+      const btn = document.getElementById("fatigaToggleBtn");
+      const txt = document.getElementById("fatigaText");
+
+      if (fatigaActiva) {
+        btn.classList.add("active");
+        txt.innerText = "Control Fatiga: ACTIVO";
+        tiempoConduciendoMs = 0;
+        tiempoParadoMs = 0;
+        avisoFatigaEmitido = false;
+        ultimoTimestampGPS = Date.now();
+        log("FATIGA: Modo monitorización activado.");
+        locucion("Control de fatiga activado");
+      } else {
+        btn.classList.remove("active");
+        txt.innerText = "Control Fatiga: DESACTIVADO";
+        tiempoConduciendoMs = 0;
+        avisoFatigaEmitido = false;
+        log("FATIGA: Desactivado.");
+      }
+    }
+
+    function activarAudioSegundoPlano() {
+      try {
+        audioSilencioso.play().then(() => {
+          document.getElementById("bgStatus").innerText = "Activo (Audio vivo)";
+          document.getElementById("bgStatus").style.color = "#00e676";
+        }).catch(() => {});
+
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: "Avisador de Radares",
+            artist: "Alerta en ruta activa",
+            album: "Cataluña Pro"
+          });
+          navigator.mediaSession.playbackState = "playing";
+        }
+      } catch (e) {}
+    }
+
+    function desactivarAudioSegundoPlano() {
+      try {
+        audioSilencioso.pause();
+        audioSilencioso.currentTime = 0;
+      } catch(e){}
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "none";
+      }
+      document.getElementById("bgStatus").innerText = "Inactivo";
+      document.getElementById("bgStatus").style.color = "#8c9ba5";
+    }
+
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) ** 2;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function calcularRumboVectorial(lat1, lon1, lat2, lon2) {
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+      let brng = Math.atan2(y, x) * 180 / Math.PI;
+      return (brng + 360) % 360;
+    }
+
+    function coincideSentido(rumboMoto, rumboRadar) {
+      if (rumboRadar === null || rumboRadar === undefined || rumboMoto === null || isNaN(rumboMoto)) return true;
+      let diff = Math.abs(rumboMoto - rumboRadar) % 360;
+      if (diff > 180) diff = 360 - diff;
+      return diff <= TOLERANCIA_RUMBO;
+    }
+
+    function mostrarAlertaVisual(radar, distancia, esIncidencia = false) {
+      const card = document.getElementById("radarAlertCard");
+      const sign = document.getElementById("alertTrafficSign");
+      if (!card || !sign) return;
+      
+      if (esIncidencia) {
+        card.classList.add("warning");
+        sign.style.borderColor = "#ff9100";
+        document.getElementById("alertIcon").innerText = radar.icone || "⚠️";
+        document.getElementById("alertSpeedSign").innerText = "!";
+        document.getElementById("alertTypeTitle").innerText = radar.tipo.toUpperCase();
+        document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
+      } else {
+        card.classList.remove("warning");
+        sign.style.borderColor = "#d32f2f";
+        document.getElementById("alertIcon").innerText = radar.icone || "📷";
+        document.getElementById("alertSpeedSign").innerText = typeof radar.velMax === 'number' ? radar.velMax : "!";
+        document.getElementById("alertTypeTitle").innerText = `RADAR ${radar.tipo.toUpperCase()}`;
+        document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
+      }
+      card.style.display = "block";
+    }
+
+    function ocultarAlertaVisual() {
+      const card = document.getElementById("radarAlertCard");
+      if (card) card.style.display = "none";
+    }
+
+    function gestionarVozEscalonada(radar, dist) {
+      if (!avisosPorVoz[radar.id]) {
+        avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
+      }
+
+      const estado = avisosPorVoz[radar.id];
+      const limiteTexto = typeof radar.velMax === 'number' ? `límite ${radar.velMax}` : 'precaución';
+
+      if (dist <= 620 && dist > 320 && !estado.fase600) {
+        estado.fase600 = true;
+        log(`VOZ: ${radar.tipo} a 600m`);
+        locucion(`Atención, ${radar.tipo} a seiscientos metros, ${limiteTexto}`);
+      }
+      else if (dist <= 270 && dist > 90 && !estado.fase250) {
+        estado.fase250 = true;
+        log(`VOZ: A 250 metros`);
+        locucion(`A doscientos cincuenta metros`);
+      }
+      else if (dist <= 50 && !estado.faseFin) {
+        estado.faseFin = true;
+        log(`VOZ: Punto de control`);
+        locucion(`Punto de control`);
+      }
+    }
+
+    function monitorizarFatiga(velActual) {
+      if (!fatigaActiva) return;
+
+      const ahora = Date.now();
+      if (ultimoTimestampGPS === 0) {
+        ultimoTimestampGPS = ahora;
+        return;
+      }
+
+      const delta = ahora - ultimoTimestampGPS;
+      ultimoTimestampGPS = ahora;
+
+      if (velActual > 20) {
+        tiempoConduciendoMs += delta;
+        tiempoParadoMs = 0;
+      } else {
+        tiempoParadoMs += delta;
+        if (tiempoParadoMs > 480000) {
+          tiempoConduciendoMs = 0;
+          avisoFatigaEmitido = false;
+        }
+      }
+
+      if (tiempoConduciendoMs >= 6300000 && !avisoFatigaEmitido) {
+        avisoFatigaEmitido = true;
+        locucion("Llevas casi dos horas de ruta continua. Recomendado realizar una parada para descansar e hidratarse.");
+        log("SEGURIDAD: Alerta de fatiga emitida (1h 45m).");
+      }
+    }
+
+    function traducirCodigoClima(code, esNoche = false) {
+      if (code === 0) return esNoche ? "🌙" : "☀️";
+      if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
+      if (code === 3) return "☁️";
+      if ([45, 48].includes(code)) return "🌫️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
+      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+      if ([95, 96, 99].includes(code)) return "⛈️";
+      return "⛅";
+    }
+
+    async function consultarPoblacionActual(lat, lon, forzar = false) {
+      const ahora = Date.now();
+      if (!forzar && ahora - ultimaConsultaCiudad < 45000) return;
+      ultimaConsultaCiudad = ahora;
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+        const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.address) {
+            const addr = data.address;
+            const ciudad = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || "Cataluña";
+            
+            if (!rutaEnCurso.ciudadOrigen) rutaEnCurso.ciudadOrigen = ciudad;
+            rutaEnCurso.ciudadDestino = ciudad;
+
+            if (ciudad !== ultimaCiudadDetectada) {
+              ultimaCiudadDetectada = ciudad;
+              document.getElementById("cityName").innerText = ciudad;
+              log(`Entrando en: ${ciudad}`);
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function consultarClimaRuta(lat, lon, forzar = false) {
+      const ahora = Date.now();
+      let distDesdeUltima = Infinity;
+      if (ultimaPosClima) {
+        distDesdeUltima = calcularDistancia(ultimaPosClima.lat, ultimaPosClima.lon, lat, lon);
+      }
+
+      if (!forzar && (ahora - ultimaConsultaClima < 300000) && distDesdeUltima < 6000) return;
+      ultimaConsultaClima = ahora;
+      ultimaPosClima = { lat, lon };
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,is_day,weather_code&timezone=auto`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.current) {
+            const temp = Math.round(data.current.temperature_2m);
+            const code = data.current.weather_code;
+            const esNoche = data.current.is_day === 0;
+
+            const icon = traducirCodigoClima(code, esNoche);
+            const tempEl = document.getElementById("weatherTemp");
+            
+            document.getElementById("weatherIcon").innerText = icon;
+            tempEl.innerText = `${temp}°`;
+
+            if (temp <= 3) {
+              tempEl.classList.add("freeze");
+              if (ahora - ultimoAvisoHielo > 2700000) {
+                ultimoAvisoHielo = ahora;
+                locucion(`Atención: temperatura de ${temp} grados. Precaución por posible hielo o asfalto frío.`);
+                log(`HIELO: Alerta de asfalto frío (${temp}°C).`);
+              }
+            } else {
+              tempEl.classList.remove("freeze");
+            }
+
+            if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code) && ahora - ultimoAvisoLluvia > 900000) {
+              ultimoAvisoLluvia = ahora;
+              locucion("Atención en ruta, zona con lluvia");
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
+      const ahora = Date.now();
+      if (ahora - ultimaConsultaLimite < 15000) return;
+      ultimaConsultaLimite = ahora;
+
+      const delta = 0.00045;
+      const query = `[out:json][timeout:3];way["highway"]["maxspeed"](${lat-delta},${lon-delta},${lat+delta},${lon+delta});out tags;`;
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.elements && data.elements.length > 0) {
+            const jerarquia = {
+              'motorway': 10,
+              'trunk': 9,
+              'primary': 8,
+              'secondary': 7,
+              'tertiary': 6,
+              'residential': 2,
+              'service': 1
+            };
+
+            const vias = data.elements.sort((a, b) => {
+              const pesoA = jerarquia[a.tags.highway] || 3;
+              const pesoB = jerarquia[b.tags.highway] || 3;
+              return pesoB - pesoA;
+            });
+
+            for (const via of vias) {
+              const spd = parseInt(via.tags.maxspeed, 10);
+              if (!isNaN(spd)) {
+                if (velActual > 65 && spd <= 50 && vias.length > 1) {
+                  continue;
+                }
+                limiteViaActual = spd;
+                document.getElementById("roadSpeedLimit").innerText = limiteViaActual;
+                return;
+              }
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function consultarAlertasWaze(lat, lon, forzar = false) {
+      if (!URL_PROXY_WAZE) return;
+
+      const ahora = Date.now();
+      if (!forzar && (ahora - ultimaActualizacionWaze < 45000)) return;
+      ultimaActualizacionWaze = ahora;
+
+      log("Waze: Sincronizando alertas en tiempo real...");
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(`${URL_PROXY_WAZE}?lat=${lat}&lon=${lon}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const alertas = await res.json();
+          if (Array.isArray(alertas)) {
+            radaresWazeActivos = alertas
+              .filter(a => !a.tipo || !['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
+              .map(a => ({ ...a, distanciaAviso: 650 }));
+
+            incidenciasWazeActivas = alertas
+              .filter(a => a.tipo && ['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
+              .map(a => ({ ...a, distanciaAviso: 800, icone: a.icone || "🚗⚠️" }));
+
+            actualizarEstadoContador();
+
+            const totalWaze = radaresWazeActivos.length + incidenciasWazeActivas.length;
+            if (totalWaze > 0) {
+              log(`Waze: Conectado (${radaresWazeActivos.length} móviles / ${incidenciasWazeActivas.length} incidencias cerca).`);
+            } else {
+              log(`Waze: Conectado (0 móviles en tu zona).`);
+            }
+          }
+        }
+      } catch (e) {
+        log("Waze: Error de red o tiempo de espera.");
+      }
+    }
+
+    function actualizarEstadoContador() {
+      const total = baseRadares.length + radaresWazeActivos.length;
+      const dbEl = document.getElementById("dbStatus");
+      if (!dbEl) return;
+      if (radaresWazeActivos.length > 0) {
+        dbEl.innerText = `${total} (${radaresWazeActivos.length} móviles Waze)`;
+      } else {
+        dbEl.innerText = `${total} radares activos`;
       }
     }
 
@@ -1134,7 +1628,6 @@
       if (ahora - ultimoPuntoGrabadoMs > 8000 && vel > 5) {
         ultimoPuntoGrabadoMs = ahora;
         rutaEnCurso.puntos.push({ lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)), vel, time: ahora });
-        // Guarda en caliente de inmediato
         autoGuardarRutaEnCaliente();
       }
 
@@ -1216,85 +1709,6 @@
       }
     }
 
-    function toggleSistema() {
-      const btn = document.getElementById("mainBtn");
-
-      if (watchId === null) {
-        activarAudioSegundoPlano();
-        lanzarNotificacionSuperior();
-        tiempoConduciendoMs = 0;
-        tiempoParadoMs = 0;
-        avisoFatigaEmitido = false;
-        ultimoTimestampGPS = Date.now();
-
-        // Inicializar Telemetría de Ruta limpia
-        rutaEnCurso = {
-          inicioMs: Date.now(),
-          finMs: 0,
-          distanciaMetros: 0,
-          velocidadMax: 0,
-          puntos: [],
-          ciudadOrigen: ultimaCiudadDetectada || "",
-          ciudadDestino: ""
-        };
-        ultimoPuntoGrabadoMs = Date.now();
-        localStorage.removeItem("ruta_activa_recuperable");
-
-        locucion("Avisador activado.");
-        if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
-
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            log("GPS: Posición fijada.");
-            posAnterior = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-            rutaEnCurso.puntos.push({ lat: Number(pos.coords.latitude.toFixed(5)), lon: Number(pos.coords.longitude.toFixed(5)), vel: 0, time: Date.now() });
-            consultarPoblacionActual(pos.coords.latitude, pos.coords.longitude, true);
-            consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
-            consultarClimaRuta(pos.coords.latitude, pos.coords.longitude, true);
-            consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
-          },
-          (err) => { log("GPS inicial: " + err.message); },
-          { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
-        );
-
-        watchId = navigator.geolocation.watchPosition(
-          procesarGPS,
-          (err) => { log("Error GPS: " + err.message); },
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-        );
-
-        btn.innerText = "DETENER SISTEMA";
-        btn.classList.add("active");
-        log("Sistema, GPS y protección de ruta activos.");
-      } else {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-        posAnterior = null;
-        desactivarAudioSegundoPlano();
-        cerrarNotificacionAndroid();
-        ocultarAlertaVisual();
-        document.getElementById("gpsStatus").innerText = "Detenido";
-        document.getElementById("gpsStatus").style.color = "#ff9100";
-        document.getElementById("speedDisplay").innerText = "0";
-        document.getElementById("headingDisplay").innerText = "--";
-        document.getElementById("roadSpeedLimit").innerText = "--";
-        document.getElementById("weatherTemp").innerText = "--°";
-        document.getElementById("cityName").innerText = "SISTEMA EN ESPERA";
-        btn.innerText = "ACTIVAR SISTEMA";
-        btn.classList.remove("active");
-        locucion("Avisador detenido.");
-
-        rutaEnCurso.finMs = Date.now();
-        if (rutaEnCurso.distanciaMetros > 100) {
-          document.getElementById("modalResumenTitulo").innerText = "🏁 Resumen de la Ruta";
-          mostrarModalResumen(rutaEnCurso);
-        } else {
-          localStorage.removeItem("ruta_activa_recuperable");
-        }
-      }
-    }
-
-    // --- GESTIÓN DE TELEMETRÍA Y RUTAS (LOCALSTORAGE + GPX) ---
     function mostrarModalResumen(ruta) {
       rutaPendienteGuardar = ruta;
       const km = (ruta.distanciaMetros / 1000).toFixed(1);
@@ -1338,7 +1752,7 @@
 
       rutas.unshift(rutaObjeto);
       localStorage.setItem("mis_rutas_moto", JSON.stringify(rutas));
-      localStorage.removeItem("ruta_activa_recuperable"); // Limpia la copia en caliente
+      localStorage.removeItem("ruta_activa_recuperable");
       log(`Ruta guardada: ${titulo} (${rutaObjeto.distanciaKm} km)`);
       cerrarModalResumen();
     }
@@ -1441,7 +1855,6 @@
     window.addEventListener("DOMContentLoaded", () => {
       actualizarEstadoContador();
       log(`Cataluña completa: ${baseRadares.length} puntos cargados.`);
-      // Comprobar si se cerró abruptamente la app en una ruta anterior
       comprobarRutaRecuperable();
     });
   </script>
