@@ -87,7 +87,7 @@
       margin: 4px 0;
     }
 
-    /* BARRA DE POBLACIÓN */
+    /* BARRA POBLACIÓN */
     .location-bar {
       background: rgba(12, 14, 18, 0.85);
       border: 1px solid rgba(0, 230, 118, 0.25);
@@ -924,7 +924,6 @@
       return diff <= TOLERANCIA_RUMBO;
     }
 
-    // PANTALLA GIGANTE DE ALERTA VISUAL
     function mostrarAlertaVisual(radar, distancia, esIncidencia = false) {
       const card = document.getElementById("radarAlertCard");
       const sign = document.getElementById("alertTrafficSign");
@@ -1139,6 +1138,7 @@
       } catch (e) {}
     }
 
+    // CONSULTA AUTOMÁTICA WAZE CON REGISTRO DE MENSAJES RESTAURADO
     async function consultarAlertasWaze(lat, lon, forzar = false) {
       if (!URL_PROXY_WAZE) return;
 
@@ -1146,8 +1146,14 @@
       if (!forzar && (ahora - ultimaActualizacionWaze < 45000)) return;
       ultimaActualizacionWaze = ahora;
 
+      log("Waze: Sincronizando alertas en tiempo real...");
+
       try {
-        const res = await fetch(`${URL_PROXY_WAZE}?lat=${lat}&lon=${lon}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(`${URL_PROXY_WAZE}?lat=${lat}&lon=${lon}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const alertas = await res.json();
           if (Array.isArray(alertas)) {
@@ -1160,9 +1166,22 @@
               .map(a => ({ ...a, distanciaAviso: 800, icone: a.icone || "🚗⚠️" }));
 
             actualizarEstadoContador();
+
+            const totalWaze = radaresWazeActivos.length + incidenciasWazeActivas.length;
+            if (totalWaze > 0) {
+              log(`Waze: Conectado (${radaresWazeActivos.length} móviles / ${incidenciasWazeActivas.length} incidencias cerca).`);
+            } else {
+              log(`Waze: Conectado (0 móviles en tu zona).`);
+            }
+          } else {
+            log("Waze: Sin datos disponibles.");
           }
+        } else {
+          log(`Waze: Respuesta del servidor (${res.status}).`);
         }
-      } catch (e) {}
+      } catch (e) {
+        log("Waze: Error de red o tiempo de espera.");
+      }
     }
 
     function actualizarEstadoContador() {
@@ -1215,7 +1234,7 @@
         spdEl.classList.remove("danger");
       }
 
-      // Consulta Waze
+      // Consulta Waze periódica
       consultarAlertasWaze(lat, lon);
 
       let alertaActiva = null;
@@ -1286,6 +1305,7 @@
         locucion("Avisador activado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
+        // 1. Forzar primera llamada a Waze y servicios con la posición actual
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             log("GPS: Posición fijada.");
@@ -1299,6 +1319,7 @@
           { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
         );
 
+        // 2. Rastreo GPS continuo
         watchId = navigator.geolocation.watchPosition(
           procesarGPS,
           (err) => { log("Error GPS: " + err.message); },
