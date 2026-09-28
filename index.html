@@ -17,7 +17,6 @@
         navigator.serviceWorker.register('sw.js').catch(() => {});
       });
 
-      // Escuchar si el usuario pulsa "Desactivar" desde la notificación de Android
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.accion === 'detener_sistema') {
           if (typeof toggleSistema === 'function' && watchId !== null) {
@@ -76,10 +75,15 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      justify-content: space-between;
       width: 100%;
+      max-width: 380px;
       padding-top: 4px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .brand-logo {
       width: 30px;
@@ -111,6 +115,20 @@
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
+    }
+
+    .btn-routes-icon {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 6px 10px;
+      color: #00e676;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .main-content {
@@ -400,6 +418,138 @@
       color: #8c9ba5;
       box-shadow: none;
     }
+
+    /* MODAL DE RESUMEN Y GESTOR DE RUTAS */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #14171d;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 18px;
+      width: 100%;
+      max-width: 360px;
+      color: #fff;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+    .modal-header h3 { font-size: 1.1rem; color: #00e676; }
+    .close-modal {
+      background: none;
+      border: none;
+      color: #8c9ba5;
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-item .val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #00e676;
+    }
+    .stat-item .lbl {
+      font-size: 0.65rem;
+      color: #8c9ba5;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-save-route {
+      flex: 1;
+      background: #00e676;
+      color: #000;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-discard-route {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      color: #8c9ba5;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* LISTADO RUTAS */
+    .route-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .route-card-title {
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .route-card-info {
+      font-size: 0.75rem;
+      color: #8c9ba5;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .route-card-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-small {
+      flex: 1;
+      padding: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn-small-maps { background: #38bdf8; color: #000; }
+    .btn-small-gpx { background: #00e676; color: #000; }
+    .btn-small-del { background: #ff3b30; color: #fff; flex: 0.4; }
   </style>
 </head>
 <body>
@@ -408,24 +558,27 @@
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
 
   <header>
-    <svg class="brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="46" stroke="#ff3b30" stroke-width="4" stroke-opacity="0.4"/>
-      <circle cx="50" cy="50" r="32" stroke="#ff3b30" stroke-width="3" stroke-dasharray="6 4"/>
-      <circle cx="50" cy="50" r="18" stroke="#ff3b30" stroke-width="3"/>
-      <circle cx="50" cy="50" r="7" fill="#ff3b30"/>
-      <path d="M50 50 L84 26" stroke="#00e676" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M50 50 A46 46 0 0 1 84 26" fill="url(#radarSweep)" opacity="0.35"/>
-      <defs>
-        <linearGradient id="radarSweep" x1="50" y1="50" x2="84" y2="26" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#00e676" stop-opacity="0.8"/>
-          <stop offset="1" stop-color="#00e676" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-    </svg>
-    <div class="header-text">
-      <h1>AVISADOR <span>RADARES</span></h1>
-      <div class="subhead">Audio BT • X10 / CAR-KIT</div>
+    <div class="header-left">
+      <svg class="brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" stroke="#ff3b30" stroke-width="4" stroke-opacity="0.4"/>
+        <circle cx="50" cy="50" r="32" stroke="#ff3b30" stroke-width="3" stroke-dasharray="6 4"/>
+        <circle cx="50" cy="50" r="18" stroke="#ff3b30" stroke-width="3"/>
+        <circle cx="50" cy="50" r="7" fill="#ff3b30"/>
+        <path d="M50 50 L84 26" stroke="#00e676" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M50 50 A46 46 0 0 1 84 26" fill="url(#radarSweep)" opacity="0.35"/>
+        <defs>
+          <linearGradient id="radarSweep" x1="50" y1="50" x2="84" y2="26" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#00e676" stop-opacity="0.8"/>
+            <stop offset="1" stop-color="#00e676" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="header-text">
+        <h1>AVISADOR <span>RADARES</span></h1>
+        <div class="subhead">Audio BT • X10 / CAR-KIT</div>
+      </div>
     </div>
+    <button class="btn-routes-icon" onclick="abrirHistorialRutas()">📂 Rutas</button>
   </header>
 
   <div class="main-content">
@@ -507,6 +660,50 @@
   </div>
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
+
+  <!-- MODAL RESUMEN DE RUTA TRAS DETENER -->
+  <div class="modal-overlay" id="modalResumen">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🏁 Resumen de la Ruta</h3>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="val" id="resumenDistancia">0.0 km</div>
+          <div class="lbl">Distancia</div>
+        </div>
+        <div class="stat-item">
+          <div class="val" id="resumenTiempo">0 min</div>
+          <div class="lbl">Tiempo Total</div>
+        </div>
+        <div class="stat-item">
+          <div class="val" id="resumenVelMax">0 km/h</div>
+          <div class="lbl">Vel. Máxima</div>
+        </div>
+        <div class="stat-item">
+          <div class="val" id="resumenVelMed">0 km/h</div>
+          <div class="lbl">Vel. Media</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-save-route" onclick="guardarRutaActual()">Guardar Ruta</button>
+        <button class="btn-discard-route" onclick="cerrarModalResumen()">Descartar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LISTADO DE RUTAS GUARDADAS -->
+  <div class="modal-overlay" id="modalHistorial">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📂 Mis Rutas Guardadas</h3>
+        <button class="close-modal" onclick="cerrarHistorialRutas()">✕</button>
+      </div>
+      <div id="listaRutasContenido">
+        <!-- Renderizado dinámico -->
+      </div>
+    </div>
+  </div>
 
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
@@ -863,6 +1060,19 @@
     let tiempoParadoMs = 0;
     let avisoFatigaEmitido = false;
 
+    // TELEMETRÍA Y GRABACIÓN DE RUTAS
+    let rutaEnCurso = {
+      inicioMs: 0,
+      finMs: 0,
+      distanciaMetros: 0,
+      velocidadMax: 0,
+      puntos: [],
+      ciudadOrigen: "",
+      ciudadDestino: ""
+    };
+    let ultimoPuntoGrabadoMs = 0;
+    let rutaPendienteGuardar = null;
+
     function log(msg) {
       const box = document.getElementById("logBox");
       box.innerHTML += `<br>> ${msg}`;
@@ -879,13 +1089,10 @@
       }
     }
 
-    // DISPARADOR DE NOTIFICACIÓN SUPERIOR (CON BOTÓN DESACTIVAR)
     function lanzarNotificacionSuperior() {
       const banner = document.getElementById("toastBanner");
       banner.style.display = "block";
-      setTimeout(() => {
-        banner.style.display = "none";
-      }, 4000);
+      setTimeout(() => { banner.style.display = "none"; }, 4000);
 
       if ('Notification' in window) {
         Notification.requestPermission().then((perm) => {
@@ -1109,6 +1316,9 @@
             const addr = data.address;
             const ciudad = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || "Cataluña";
             
+            if (!rutaEnCurso.ciudadOrigen) rutaEnCurso.ciudadOrigen = ciudad;
+            rutaEnCurso.ciudadDestino = ciudad;
+
             if (ciudad !== ultimaCiudadDetectada) {
               ultimaCiudadDetectada = ciudad;
               document.getElementById("cityName").innerText = ciudad;
@@ -1278,13 +1488,30 @@
       const lon = pos.coords.longitude;
       const vel = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
       
+      // REGISTRO DE TELEMETRÍA EN RUTA
+      if (vel > rutaEnCurso.velocidadMax) {
+        rutaEnCurso.velocidadMax = vel;
+      }
+
       let rumbo = null;
-      if (posAnterior && vel > 12) {
-        const distMov = calcularDistancia(posAnterior.lat, posAnterior.lon, lat, lon);
-        if (distMov > 4) {
+      if (posAnterior) {
+        const distPaso = calcularDistancia(posAnterior.lat, posAnterior.lon, lat, lon);
+        // Filtrar rebotes mínimos del GPS en parado
+        if (distPaso > 3) {
+          rutaEnCurso.distanciaMetros += distPaso;
+        }
+        if (vel > 12 && distPaso > 4) {
           rumbo = Math.round(calcularRumboVectorial(posAnterior.lat, posAnterior.lon, lat, lon));
         }
       }
+
+      // Guardar punto GPS simplificado cada 8 segundos
+      const ahora = Date.now();
+      if (ahora - ultimoPuntoGrabadoMs > 8000 && vel > 5) {
+        ultimoPuntoGrabadoMs = ahora;
+        rutaEnCurso.puntos.push({ lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)), vel, time: ahora });
+      }
+
       if (rumbo === null && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
         rumbo = Math.round(pos.coords.heading);
       }
@@ -1374,6 +1601,18 @@
         avisoFatigaEmitido = false;
         ultimoTimestampGPS = Date.now();
 
+        // Inicializar Telemetría de Ruta
+        rutaEnCurso = {
+          inicioMs: Date.now(),
+          finMs: 0,
+          distanciaMetros: 0,
+          velocidadMax: 0,
+          puntos: [],
+          ciudadOrigen: ultimaCiudadDetectada || "",
+          ciudadDestino: ""
+        };
+        ultimoPuntoGrabadoMs = Date.now();
+
         locucion("Avisador activado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
@@ -1381,6 +1620,7 @@
           (pos) => {
             log("GPS: Posición fijada.");
             posAnterior = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            rutaEnCurso.puntos.push({ lat: Number(pos.coords.latitude.toFixed(5)), lon: Number(pos.coords.longitude.toFixed(5)), vel: 0, time: Date.now() });
             consultarPoblacionActual(pos.coords.latitude, pos.coords.longitude, true);
             consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
             consultarClimaRuta(pos.coords.latitude, pos.coords.longitude, true);
@@ -1398,7 +1638,7 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("Sistema y GPS activos.");
+        log("Sistema, GPS y telemetría de ruta activos.");
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
@@ -1416,7 +1656,153 @@
         btn.innerText = "ACTIVAR SISTEMA";
         btn.classList.remove("active");
         locucion("Avisador detenido.");
+
+        // FINALIZAR Y MOSTRAR RESUMEN SI HAY RUTA VÁLIDA (> 100 metros)
+        rutaEnCurso.finMs = Date.now();
+        if (rutaEnCurso.distanciaMetros > 100) {
+          mostrarModalResumen(rutaEnCurso);
+        }
       }
+    }
+
+    // --- GESTIÓN DE TELEMETRÍA Y RUTAS (LOCALSTORAGE + GPX) ---
+    function mostrarModalResumen(ruta) {
+      rutaPendienteGuardar = ruta;
+      const km = (ruta.distanciaMetros / 1000).toFixed(1);
+      const min = Math.max(1, Math.round((ruta.finMs - ruta.inicioMs) / 60000));
+      const velMedia = Math.round((ruta.distanciaMetros / 1000) / ((ruta.finMs - ruta.inicioMs) / 3600000)) || 0;
+
+      document.getElementById("resumenDistancia").innerText = `${km} km`;
+      document.getElementById("resumenTiempo").innerText = `${min} min`;
+      document.getElementById("resumenVelMax").innerText = `${ruta.velocidadMax} km/h`;
+      document.getElementById("resumenVelMed").innerText = `${velMedia} km/h`;
+      document.getElementById("modalResumen").style.display = "flex";
+    }
+
+    function cerrarModalResumen() {
+      document.getElementById("modalResumen").style.display = "none";
+      rutaPendienteGuardar = null;
+    }
+
+    function guardarRutaActual() {
+      if (!rutaPendienteGuardar) return;
+      
+      const rutas = JSON.parse(localStorage.getItem("mis_rutas_moto") || "[]");
+      const fecha = new Date(rutaPendienteGuardar.inicioMs);
+      const fechaStr = `${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()} ${fecha.getHours().toString().padStart(2,'0')}:${fecha.getMinutes().toString().padStart(2,'0')}`;
+      
+      const origen = rutaPendienteGuardar.ciudadOrigen || "Ruta";
+      const destino = rutaPendienteGuardar.ciudadDestino || "";
+      const titulo = destino && destino !== origen ? `${origen} ➔ ${destino}` : `Ruta en ${origen}`;
+
+      const rutaObjeto = {
+        id: "ruta_" + Date.now(),
+        titulo: titulo,
+        fecha: fechaStr,
+        distanciaKm: (rutaPendienteGuardar.distanciaMetros / 1000).toFixed(1),
+        tiempoMin: Math.max(1, Math.round((rutaPendienteGuardar.finMs - rutaPendienteGuardar.inicioMs) / 60000)),
+        velMax: rutaPendienteGuardar.velocidadMax,
+        velMed: Math.round((rutaPendienteGuardar.distanciaMetros / 1000) / ((rutaPendienteGuardar.finMs - rutaPendienteGuardar.inicioMs) / 3600000)) || 0,
+        puntos: rutaPendienteGuardar.puntos
+      };
+
+      rutas.unshift(rutaObjeto);
+      localStorage.setItem("mis_rutas_moto", JSON.stringify(rutas));
+      log(`Ruta guardada: ${titulo} (${rutaObjeto.distanciaKm} km)`);
+      cerrarModalResumen();
+    }
+
+    function abrirHistorialRutas() {
+      const modal = document.getElementById("modalHistorial");
+      const contenedor = document.getElementById("listaRutasContenido");
+      const rutas = JSON.parse(localStorage.getItem("mis_rutas_moto") || "[]");
+
+      if (rutas.length === 0) {
+        contenedor.innerHTML = "<p style='color:#8c9ba5; text-align:center; padding: 20px 0;'>No hay rutas guardadas todavía.</p>";
+      } else {
+        let html = "";
+        rutas.forEach((r, idx) => {
+          html += `
+            <div class="route-card">
+              <div class="route-card-title">
+                <span>${r.titulo}</span>
+                <span style="color:#00e676;">${r.distanciaKm} km</span>
+              </div>
+              <div class="route-card-info">
+                📅 ${r.fecha} • ⏱️ ${r.tiempoMin} min<br>
+                🚀 Vel. Máx: ${r.velMax} km/h • Media: ${r.velMed} km/h
+              </div>
+              <div class="route-card-btns">
+                <button class="btn-small btn-small-maps" onclick="abrirRutaEnMaps(${idx})">Google Maps</button>
+                <button class="btn-small btn-small-gpx" onclick="descargarGPX(${idx})">Exportar GPX</button>
+                <button class="btn-small btn-small-del" onclick="eliminarRuta(${idx})">🗑️</button>
+              </div>
+            </div>
+          `;
+        });
+        contenedor.innerHTML = html;
+      }
+      modal.style.display = "flex";
+    }
+
+    function cerrarHistorialRutas() {
+      document.getElementById("modalHistorial").style.display = "none";
+    }
+
+    function abrirRutaEnMaps(idx) {
+      const rutas = JSON.parse(localStorage.getItem("mis_rutas_moto") || "[]");
+      const r = rutas[idx];
+      if (!r || !r.puntos || r.puntos.length < 2) {
+        alert("La ruta no contiene suficientes puntos GPS para visualizar.");
+        return;
+      }
+      const pInicio = r.puntos[0];
+      const pFin = r.puntos[r.puntos.length - 1];
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${pInicio.lat},${pInicio.lon}&destination=${pFin.lat},${pFin.lon}&travelmode=driving`;
+      window.open(url, "_blank");
+    }
+
+    function descargarGPX(idx) {
+      const rutas = JSON.parse(localStorage.getItem("mis_rutas_moto") || "[]");
+      const r = rutas[idx];
+      if (!r || !r.puntos || r.puntos.length === 0) return;
+
+      let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="AvisadorRadaresMoto" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>${r.titulo}</name>
+    <trkseg>`;
+
+      r.puntos.forEach(p => {
+        const timeIso = new Date(p.time).toISOString();
+        gpx += `
+      <trkpt lat="${p.lat}" lon="${p.lon}">
+        <time>${timeIso}</time>
+        <speed>${(p.vel / 3.6).toFixed(2)}</speed>
+      </trkpt>`;
+      });
+
+      gpx += `
+    </trkseg>
+  </trk>
+</gpx>`;
+
+      const blob = new Blob([gpx], { type: "application/gpx+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${r.titulo.replace(/[^a-zA-Z0-9]/g, "_")}.gpx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function eliminarRuta(idx) {
+      const rutas = JSON.parse(localStorage.getItem("mis_rutas_moto") || "[]");
+      rutas.splice(idx, 1);
+      localStorage.setItem("mis_rutas_moto", JSON.stringify(rutas));
+      abrirHistorialRutas();
     }
 
     window.addEventListener("DOMContentLoaded", () => {
