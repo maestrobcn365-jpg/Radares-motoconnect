@@ -113,7 +113,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 6px 0 2px;
+      padding: 4px 0 2px;
     }
     .speed-number {
       font-size: 6rem;
@@ -143,7 +143,7 @@
       margin-top: 4px;
     }
 
-    /* TARJETA ALERTA RADAR */
+    /* TARJETA ALERTA RADAR O INCIDENCIA */
     .alert-card {
       display: none;
       background: linear-gradient(145deg, #241111, #150a0a);
@@ -154,6 +154,11 @@
       box-shadow: 0 0 20px rgba(255, 59, 48, 0.5);
       animation: pulsoAlerta 1.2s infinite alternate;
       margin-bottom: 6px;
+    }
+    .alert-card.warning {
+      background: linear-gradient(145deg, #2a1f0a, #161105);
+      border-color: #ff9100;
+      box-shadow: 0 0 20px rgba(255, 145, 0, 0.5);
     }
     @keyframes pulsoAlerta {
       from { border-color: #ff3b30; }
@@ -194,6 +199,36 @@
       font-size: 1.3rem;
       color: #00e676;
       font-weight: 800;
+    }
+
+    /* PESTAÑA / BOTÓN DE CONTROL DE FATIGA */
+    .fatiga-toggle-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .fatiga-btn {
+      background: rgba(30, 35, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #8c9ba5;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+    .fatiga-btn.active {
+      background: rgba(0, 230, 118, 0.15);
+      border-color: #00e676;
+      color: #00e676;
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
     }
 
     /* CAJA INFERIOR */
@@ -255,7 +290,7 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* MÓDULO DEL CLIMA CON ICONO Y NÚMERO MÁS GRANDE */
+    /* MÓDULO DEL CLIMA */
     .weather-box {
       display: flex;
       align-items: center;
@@ -272,6 +307,10 @@
       font-size: 1.6rem;
       font-weight: 900;
       color: #ffffff;
+    }
+    .weather-temp.freeze {
+      color: #38bdf8;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
     }
 
     .status-row {
@@ -357,11 +396,11 @@
       <div class="speed-unit">km/h</div>
     </div>
 
-    <!-- TARJETA ALERTA RADAR -->
+    <!-- TARJETA ALERTA RADAR / RETENCIÓN -->
     <div class="alert-card" id="radarAlertCard">
       <div class="alert-top">
         <div class="radar-icon-box" id="alertIcon">📷</div>
-        <div class="traffic-sign">
+        <div class="traffic-sign" id="alertTrafficSign">
           <span id="alertSpeedSign">--</span>
         </div>
       </div>
@@ -369,11 +408,18 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
+    <!-- BOTÓN / PESTAÑA TOGGLE CONTROL DE FATIGA (DESACTIVADO SIEMPRE POR DEFECTO) -->
+    <div class="fatiga-toggle-bar">
+      <button type="button" class="fatiga-btn" id="fatigaToggleBtn" onclick="toggleFatiga()">
+        <span>☕</span>
+        <span id="fatigaText">Control Fatiga: DESACTIVADO</span>
+      </button>
+    </div>
+
     <!-- CAJA INFERIOR: LÍMITE + CLIMA + RUMBO -->
     <div class="panel-bottom">
       <div class="metric-subgroup">
         
-        <!-- 1. LÍMITE DE VÍA -->
         <div class="submetric">
           <div class="speed-limit-badge">
             <span id="roadSpeedLimit">--</span>
@@ -381,7 +427,6 @@
           <span class="lbl">Límite Vía</span>
         </div>
 
-        <!-- 2. CLIMA EN RUTA (ICONO Y TEMPERATURA AMPLIADOS) -->
         <div class="submetric">
           <div class="weather-box">
             <span class="weather-icon" id="weatherIcon">☀️</span>
@@ -390,7 +435,6 @@
           <span class="lbl">Clima Ruta</span>
         </div>
 
-        <!-- 3. RUMBO -->
         <div class="submetric">
           <span class="val" id="headingDisplay">--</span>
           <span class="lbl">Rumbo (°)</span>
@@ -749,6 +793,7 @@
 
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
+    let incidenciasWazeActivas = [];
 
     let posAnterior = null;
     let historialDistancias = {};
@@ -757,12 +802,20 @@
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
 
-    // GESTIÓN DEL CLIMA CADA 5 MINUTOS Y POBLACIÓN EN RUTA
+    // CLIMA Y POBLACIÓN
     let ultimaConsultaClima = 0;
     let ultimaPosClima = null;
     let ultimoAvisoLluvia = 0;
     let ultimaConsultaCiudad = 0;
     let ultimaCiudadDetectada = "";
+
+    // SEGURIDAD VIAL: HIELO, RETENCIONES Y CONTROL DE FATIGA OPCIONAL
+    let ultimoAvisoHielo = 0;
+    let fatigaActiva = false; // SIEMPRE DESACTIVADO POR DEFECTO
+    let tiempoConduciendoMs = 0;
+    let ultimoTimestampGPS = 0;
+    let tiempoParadoMs = 0;
+    let avisoFatigaEmitido = false;
 
     function log(msg) {
       const box = document.getElementById("logBox");
@@ -777,6 +830,30 @@
         voz.lang = 'es-ES';
         voz.rate = 1.1;
         window.speechSynthesis.speak(voz);
+      }
+    }
+
+    // BOTÓN TOGGLE MANUAL CONTROL FATIGA
+    function toggleFatiga() {
+      fatigaActiva = !fatigaActiva;
+      const btn = document.getElementById("fatigaToggleBtn");
+      const txt = document.getElementById("fatigaText");
+
+      if (fatigaActiva) {
+        btn.classList.add("active");
+        txt.innerText = "Control Fatiga: ACTIVO";
+        tiempoConduciendoMs = 0;
+        tiempoParadoMs = 0;
+        avisoFatigaEmitido = false;
+        ultimoTimestampGPS = Date.now();
+        log("FATIGA: Modo monitorización activado.");
+        locucion("Control de fatiga activado");
+      } else {
+        btn.classList.remove("active");
+        txt.innerText = "Control Fatiga: DESACTIVADO";
+        tiempoConduciendoMs = 0;
+        avisoFatigaEmitido = false;
+        log("FATIGA: Desactivado.");
       }
     }
 
@@ -841,12 +918,25 @@
       return diff <= TOLERANCIA_RUMBO;
     }
 
-    function mostrarAlertaVisual(radar, distancia) {
+    function mostrarAlertaVisual(radar, distancia, esIncidencia = false) {
       const card = document.getElementById("radarAlertCard");
-      document.getElementById("alertIcon").innerText = radar.icone || "📷";
-      document.getElementById("alertSpeedSign").innerText = typeof radar.velMax === 'number' ? radar.velMax : "!";
-      document.getElementById("alertTypeTitle").innerText = `RADAR ${radar.tipo.toUpperCase()}`;
-      document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
+      const sign = document.getElementById("alertTrafficSign");
+      
+      if (esIncidencia) {
+        card.classList.add("warning");
+        sign.style.borderColor = "#ff9100";
+        document.getElementById("alertIcon").innerText = radar.icone || "⚠️";
+        document.getElementById("alertSpeedSign").innerText = "!";
+        document.getElementById("alertTypeTitle").innerText = radar.tipo.toUpperCase();
+        document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
+      } else {
+        card.classList.remove("warning");
+        sign.style.borderColor = "#d32f2f";
+        document.getElementById("alertIcon").innerText = radar.icone || "📷";
+        document.getElementById("alertSpeedSign").innerText = typeof radar.velMax === 'number' ? radar.velMax : "!";
+        document.getElementById("alertTypeTitle").innerText = `RADAR ${radar.tipo.toUpperCase()}`;
+        document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
+      }
       card.style.display = "block";
     }
 
@@ -879,6 +969,38 @@
       }
     }
 
+    // MONITORIZACIÓN DE FATIGA (SOLO SI EL USUARIO LO ACTIVÓ)
+    function monitorizarFatiga(velActual) {
+      if (!fatigaActiva) return;
+
+      const ahora = Date.now();
+      if (ultimoTimestampGPS === 0) {
+        ultimoTimestampGPS = ahora;
+        return;
+      }
+
+      const delta = ahora - ultimoTimestampGPS;
+      ultimoTimestampGPS = ahora;
+
+      if (velActual > 20) {
+        tiempoConduciendoMs += delta;
+        tiempoParadoMs = 0;
+      } else {
+        tiempoParadoMs += delta;
+        if (tiempoParadoMs > 480000) { // Si descansa 8 min, reinicia
+          tiempoConduciendoMs = 0;
+          avisoFatigaEmitido = false;
+        }
+      }
+
+      // Alerta a la 1h 45m (6.300.000 ms)
+      if (tiempoConduciendoMs >= 6300000 && !avisoFatigaEmitido) {
+        avisoFatigaEmitido = true;
+        locucion("Llevas casi dos horas de ruta continua. Recomendado realizar una parada para descansar e hidratarse.");
+        log("SEGURIDAD: Alerta de fatiga emitida (1h 45m).");
+      }
+    }
+
     function traducirCodigoClima(code, esNoche = false) {
       if (code === 0) return esNoche ? "🌙" : "☀️";
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
@@ -891,7 +1013,6 @@
       return "⛅";
     }
 
-    // 1. CONSULTA DE POBLACIÓN EXACTA (REVERSE GEOCODING NOMINATIM / OSM)
     async function consultarPoblacionActual(lat, lon, forzar = false) {
       const ahora = Date.now();
       if (!forzar && ahora - ultimaConsultaCiudad < 45000) return;
@@ -916,7 +1037,6 @@
       } catch (e) {}
     }
 
-    // 2. CONSULTA DEL TIEMPO CADA 5 MINUTOS (OPEN-METEO EXACTO)
     async function consultarClimaRuta(lat, lon, forzar = false) {
       const ahora = Date.now();
       let distDesdeUltima = Infinity;
@@ -924,7 +1044,6 @@
         distDesdeUltima = calcularDistancia(ultimaPosClima.lat, ultimaPosClima.lon, lat, lon);
       }
 
-      // Exactamente cada 5 minutos (300.000 ms) o tras desplazarse más de 6 km
       if (!forzar && (ahora - ultimaConsultaClima < 300000) && distDesdeUltima < 6000) return;
       ultimaConsultaClima = ahora;
       ultimaPosClima = { lat, lon };
@@ -940,12 +1059,22 @@
             const esNoche = data.current.is_day === 0;
 
             const icon = traducirCodigoClima(code, esNoche);
+            const tempEl = document.getElementById("weatherTemp");
+            
             document.getElementById("weatherIcon").innerText = icon;
-            document.getElementById("weatherTemp").innerText = `${temp}°`;
+            tempEl.innerText = `${temp}°`;
 
-            log(`Clima (5 min): ${temp}°C ${icon}`);
+            if (temp <= 3) {
+              tempEl.classList.add("freeze");
+              if (ahora - ultimoAvisoHielo > 2700000) {
+                ultimoAvisoHielo = ahora;
+                locucion(`Atención: temperatura de ${temp} grados. Precaución por posible hielo o asfalto frío.`);
+                log(`HIELO: Alerta de asfalto frío (${temp}°C).`);
+              }
+            } else {
+              tempEl.classList.remove("freeze");
+            }
 
-            // Aviso por voz si entra lluvia o tormenta
             if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code) && ahora - ultimoAvisoLluvia > 900000) {
               ultimoAvisoLluvia = ahora;
               locucion("Atención en ruta, zona con lluvia");
@@ -1017,13 +1146,15 @@
         if (res.ok) {
           const alertas = await res.json();
           if (Array.isArray(alertas)) {
-            radaresWazeActivos = alertas.map(a => ({ ...a, distanciaAviso: 650 }));
+            radaresWazeActivos = alertas
+              .filter(a => !a.tipo || !['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
+              .map(a => ({ ...a, distanciaAviso: 650 }));
+
+            incidenciasWazeActivas = alertas
+              .filter(a => a.tipo && ['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
+              .map(a => ({ ...a, distanciaAviso: 800, icone: a.icone || "🚗⚠️" }));
+
             actualizarEstadoContador();
-            if (alertas.length > 0) {
-              log(`Waze: Conectado (${alertas.length} móviles cerca).`);
-            } else {
-              log(`Waze: Conectado (0 móviles en tu zona).`);
-            }
           }
         }
       } catch (e) {}
@@ -1062,13 +1193,14 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // 1. Población en tiempo real
-      consultarPoblacionActual(lat, lon);
+      // 1. Control de fatiga (si está encendido)
+      monitorizarFatiga(vel);
 
-      // 2. Límite de vía
+      // 2. Población y Límite
+      consultarPoblacionActual(lat, lon);
       consultarLimiteVelocidadVia(lat, lon, vel);
 
-      // 3. Clima en ruta cada 5 minutos
+      // 3. Clima y Hielo
       consultarClimaRuta(lat, lon);
 
       if (limiteViaActual && vel > limiteViaActual) {
@@ -1081,14 +1213,30 @@
         spdEl.classList.remove("danger");
       }
 
-      // 4. Radares Waze y fijos
+      // 4. Waze (Radares e Incidencias)
       consultarAlertasWaze(lat, lon);
 
-      let radarActivo = null;
+      let alertaActiva = null;
       let distanciaMinima = Infinity;
+      let esIncidencia = false;
+
+      incidenciasWazeActivas.forEach(inc => {
+        const dist = calcularDistancia(lat, lon, inc.lat, inc.lon);
+        if (dist <= 800 && coincideSentido(rumbo, inc.rumbo)) {
+          if (dist < distanciaMinima) {
+            distanciaMinima = dist;
+            alertaActiva = inc;
+            esIncidencia = true;
+          }
+          if (!avisosPorVoz[inc.id]) {
+            avisosPorVoz[inc.id] = true;
+            locucion(`Precaución, ${inc.tipo} a seiscientos metros`);
+            log(`TRÁFICO: ${inc.tipo} detectada.`);
+          }
+        }
+      });
 
       const todosLosRadares = [...baseRadares, ...radaresWazeActivos];
-
       todosLosRadares.forEach(radar => {
         const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
         const radioAviso = radar.distanciaAviso || 600;
@@ -1098,13 +1246,12 @@
             const distPrevia = historialDistancias[radar.id] || Infinity;
             historialDistancias[radar.id] = dist;
 
-            if (dist > distPrevia + 15 && dist > 60) {
-              return;
-            }
+            if (dist > distPrevia + 15 && dist > 60) return;
 
             if (dist < distanciaMinima) {
               distanciaMinima = dist;
-              radarActivo = radar;
+              alertaActiva = radar;
+              esIncidencia = false;
             }
             gestionarVozEscalonada(radar, dist);
           }
@@ -1114,8 +1261,8 @@
         }
       });
 
-      if (radarActivo) {
-        mostrarAlertaVisual(radarActivo, distanciaMinima);
+      if (alertaActiva) {
+        mostrarAlertaVisual(alertaActiva, distanciaMinima, esIncidencia);
       } else {
         ocultarAlertaVisual();
       }
@@ -1126,12 +1273,17 @@
 
       if (watchId === null) {
         activarAudioSegundoPlano();
-        locucion("Avisador de radares activado. Precisión máxima, clima y población habilitados.");
+        tiempoConduciendoMs = 0;
+        tiempoParadoMs = 0;
+        avisoFatigaEmitido = false;
+        ultimoTimestampGPS = Date.now();
+
+        locucion("Avisador activado.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            log("GPS: Posición de alta precisión fijada.");
+            log("GPS: Posición fijada.");
             posAnterior = { lat: pos.coords.latitude, lon: pos.coords.longitude };
             consultarPoblacionActual(pos.coords.latitude, pos.coords.longitude, true);
             consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
@@ -1150,7 +1302,7 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("GPS de alta precisión activo.");
+        log("Sistema y GPS activos.");
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
