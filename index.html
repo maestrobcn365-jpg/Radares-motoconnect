@@ -16,6 +16,15 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(() => {});
       });
+
+      // Escuchar si el usuario pulsa "Desactivar" desde la notificación de Android
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.accion === 'detener_sistema') {
+          if (typeof toggleSistema === 'function' && watchId !== null) {
+            toggleSistema();
+          }
+        }
+      });
     }
   </script>
 
@@ -870,25 +879,28 @@
       }
     }
 
-    // DISPARADOR DE NOTIFICACIÓN SUPERIOR (BANNER + ANDROID)
+    // DISPARADOR DE NOTIFICACIÓN SUPERIOR (CON BOTÓN DESACTIVAR)
     function lanzarNotificacionSuperior() {
-      // 1. Banner flotante en pantalla
       const banner = document.getElementById("toastBanner");
       banner.style.display = "block";
       setTimeout(() => {
         banner.style.display = "none";
       }, 4000);
 
-      // 2. Tarjeta en la barra de Android
       if ('Notification' in window) {
         Notification.requestPermission().then((perm) => {
           if (perm === 'granted' && 'serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then((reg) => {
               reg.showNotification("Avisador de Radares ACTIVO", {
-                body: "Protección en ruta activa • Audio y GPS en segundo plano",
+                body: "Protección en ruta activa • Pulsa para volver a la app",
                 icon: "https://cdn-icons-png.flaticon.com/192/854/854878.png",
                 tag: "radar-status",
-                silent: true
+                renotify: false,
+                requireInteraction: true,
+                silent: true,
+                actions: [
+                  { action: 'desactivar', title: '⏹️ Desactivar' }
+                ]
               });
             });
           }
