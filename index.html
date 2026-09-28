@@ -21,9 +21,7 @@
       align-items: center;
       padding: 10px 14px 14px;
     }
-    header {
-      text-align: center;
-    }
+    header { text-align: center; }
     h1 {
       font-size: 1.15rem;
       color: #ff3b30;
@@ -224,17 +222,20 @@
       </div>
       <div class="status-row">
         <span>Base de Radares:</span>
-        <span id="dbStatus" style="color: #00e676;">Cargando Cataluña...</span>
+        <span id="dbStatus" style="color: #00e676;">Cargando...</span>
       </div>
 
-      <div class="log-box" id="logBox">> Base integral cargada. Pulsa Activar Sistema.</div>
+      <div class="log-box" id="logBox">> Base lista. Pulsa Activar Sistema.</div>
     </div>
   </div>
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
 
   <script>
-    // BASE INTEGRAL DE CATALUÑA (SCT + RONDAS + MUNICIPIOS + AUTOVÍAS + COMARCALES)
+    // URL DE TU WORKER DE CLOUDFLARE (Cambia esta URL por la tuya cuando la tengas)
+    const URL_PROXY_WAZE = "https://waze-radar-proxy.tu-usuario.workers.dev";
+
+    // BASE INTEGRAL DE CATALUÑA
     const baseRadares = [
       // BARCELONA CIUDAD, RONDAS Y TÚNELES
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":350},
@@ -517,6 +518,10 @@
     const avisosPorVoz = {};
     const TOLERANCIA_RUMBO = 45;
 
+    // INTEGRACIÓN TIEMPO REAL (WAZE LIVE POLICE)
+    let ultimaActualizacionWaze = 0;
+    let radaresWazeActivos = [];
+
     function log(msg) {
       const box = document.getElementById("logBox");
       box.innerHTML += `<br>> ${msg}`;
@@ -536,8 +541,8 @@
     // AUDIO INAUDIBLE PARA SEGUNDO PLANO
     function activarAudioSegundoPlano() {
       try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioContext = new AudioContext();
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioCtx();
 
         const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
         silentNode = audioContext.createBufferSource();
@@ -599,7 +604,7 @@
     function mostrarAlertaVisual(radar, distancia) {
       const card = document.getElementById("radarAlertCard");
       document.getElementById("alertIcon").innerText = radar.icone || "📷";
-      document.getElementById("alertSpeedSign").innerText = radar.velMax || "--";
+      document.getElementById("alertSpeedSign").innerText = typeof radar.velMax === 'number' ? radar.velMax : "!";
       document.getElementById("alertTypeTitle").innerText = `RADAR ${radar.tipo.toUpperCase()}`;
       document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
       card.style.display = "block";
@@ -616,11 +621,12 @@
       }
 
       const estado = avisosPorVoz[radar.id];
+      const limiteTexto = typeof radar.velMax === 'number' ? `límite ${radar.velMax}` : 'precaución';
 
-      if (dist <= 320 && dist > 180 && !estado.fase300) {
+      if (dist <= 350 && dist > 180 && !estado.fase300) {
         estado.fase300 = true;
-        log(`VOZ: Radar ${radar.tipo} a 300m (${radar.velMax})`);
-        locucion(`Atención, radar ${radar.tipo} a trescientos metros, límite ${radar.velMax}`);
+        log(`VOZ: ${radar.tipo} a 300m (${radar.velMax})`);
+        locucion(`Atención, ${radar.tipo} a trescientos metros, ${limiteTexto}`);
       }
       else if (dist <= 170 && dist > 70 && !estado.fase150) {
         estado.fase150 = true;
@@ -629,8 +635,42 @@
       }
       else if (dist <= 45 && !estado.faseFin) {
         estado.faseFin = true;
-        log(`VOZ: Superado`);
+        log(`VOZ: Punto de control`);
         locucion(`Punto de control`);
+      }
+    }
+
+    // CONSULTA PERIÓDICA A WAZE VÍA CLOUDFLARE
+    async function consultarAlertasWaze(lat, lon) {
+      if (!URL_PROXY_WAZE || URL_PROXY_WAZE.includes("tu-usuario")) return;
+
+      const ahora = Date.now();
+      if (ahora - ultimaActualizacionWaze < 60000) return;
+      ultimaActualizacionWaze = ahora;
+
+      try {
+        const res = await fetch(`${URL_PROXY_WAZE}?lat=${lat}&lon=${lon}`);
+        if (res.ok) {
+          const alertas = await res.json();
+          if (Array.isArray(alertas)) {
+            radaresWazeActivos = alertas;
+            actualizarEstadoContador();
+            if (alertas.length > 0) {
+              log(`Waze: ${alertas.length} móviles activos cerca.`);
+            }
+          }
+        }
+      } catch (e) {
+        // En caso de fallo de red, se mantiene la base sin interrumpir
+      }
+    }
+
+    function actualizarEstadoContador() {
+      const total = baseRadares.length + radaresWazeActivos.length;
+      if (radaresWazeActivos.length > 0) {
+        document.getElementById("dbStatus").innerText = `${total} (${radaresWazeActivos.length} móviles Waze)`;
+      } else {
+        document.getElementById("dbStatus").innerText = `${total} radares activos`;
       }
     }
 
@@ -646,10 +686,16 @@
       document.getElementById("speedDisplay").innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
+      // Búsqueda en vivo de alertas de Waze en tu área
+      consultarAlertasWaze(lat, lon);
+
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
-      baseRadares.forEach(radar => {
+      // Lista combinada: Base de Cataluña + Móviles de Waze
+      const todosLosRadares = [...baseRadares, ...radaresWazeActivos];
+
+      todosLosRadares.forEach(radar => {
         const dist = calcularDistancia(lat, lon, radar.lat, radar.lon);
         const radioAviso = radar.distanciaAviso || 350;
 
@@ -706,7 +752,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("dbStatus").innerText = `${baseRadares.length} radares activos`;
+      actualizarEstadoContador();
       log(`Cataluña completa: ${baseRadares.length} puntos cargados.`);
     });
   </script>
