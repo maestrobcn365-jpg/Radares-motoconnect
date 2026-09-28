@@ -308,6 +308,10 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
+    // PISTA DE AUDIO REAL CONTINUA PARA MANTENER LA CPU Y EL GPS DESPIERTOS CON PANTALLA APAGADA
+    const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+    audioSilencioso.loop = true;
+
     const baseRadares = [
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":450},
       {"id":"BCN-B20-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":450},
@@ -627,8 +631,6 @@
 
     let watchId = null;
     let wakeLock = null;
-    let audioContext = null;
-    let silentNode = null;
     const avisosPorVoz = {};
     const TOLERANCIA_RUMBO = 45;
 
@@ -656,44 +658,35 @@
       }
     }
 
+    // SEGUNDO PLANO BLINDADO CON AUDIO REAL
     function activarAudioSegundoPlano() {
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        audioContext = new AudioCtx();
-
-        const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
-        silentNode = audioContext.createBufferSource();
-        silentNode.buffer = buffer;
-        silentNode.loop = true;
-        silentNode.connect(audioContext.destination);
-        silentNode.start();
+        audioSilencioso.play().then(() => {
+          document.getElementById("bgStatus").innerText = "Activo (Audio vivo)";
+          document.getElementById("bgStatus").style.color = "#00e676";
+          log("Segundo plano: blindado con audio.");
+        }).catch(() => {
+          log("Pulsa la pantalla para autorizar audio.");
+        });
 
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
-            title: "Avisador de Radares Activo",
-            artist: "Avisos por voz X10 / CAR-KIT",
-            album: "Cataluña Total"
+            title: "Avisador de Radares",
+            artist: "Alerta en ruta activa",
+            album: "Cataluña Pro"
           });
           navigator.mediaSession.playbackState = "playing";
         }
-
-        document.getElementById("bgStatus").innerText = "Activo (Audio vivo)";
-        document.getElementById("bgStatus").style.color = "#00e676";
-        log("Segundo plano activado.");
       } catch (e) {
-        log("Audio de segundo plano restringido.");
+        log("Segundo plano de audio restringido.");
       }
     }
 
     function desactivarAudioSegundoPlano() {
-      if (silentNode) {
-        try { silentNode.stop(); } catch(e){}
-        silentNode = null;
-      }
-      if (audioContext) {
-        try { audioContext.close(); } catch(e){}
-        audioContext = null;
-      }
+      try {
+        audioSilencioso.pause();
+        audioSilencioso.currentTime = 0;
+      } catch(e){}
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = "none";
       }
@@ -805,7 +798,7 @@
           }
         }
       } catch (e) {
-        // Mantiene el último límite válido en caso de error
+        // Mantiene el último límite válido en caso de microcorte
       }
     }
 
@@ -862,7 +855,7 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // Límite de vía pasando velocidad actual para evitar conflicto con laterales
+      // 1. Detección de límite pasando velocidad real para no caer en el 50 del lateral
       consultarLimiteVelocidadVia(lat, lon, vel);
 
       if (limiteViaActual && vel > limiteViaActual) {
@@ -875,8 +868,10 @@
         spdEl.classList.remove("danger");
       }
 
+      // 2. Consulta de móviles Waze
       consultarAlertasWaze(lat, lon);
 
+      // 3. Verificación de proximidad de radares
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
