@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Avisador de Radares - Cataluña Pro</title>
+
+  <!-- SOPORTE PWA PARA INSTALACIÓN COMO APP EN ANDROID -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff3b30">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -308,7 +323,7 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // PISTA DE AUDIO REAL CONTINUA PARA MANTENER LA CPU Y EL GPS DESPIERTOS CON PANTALLA APAGADA
+    // PISTA DE AUDIO REAL EN SILENCIO (WAV 1s LOOP) PARA MANTENER LA CPU Y GPS ACTIVOS EN EL BOLSILLO
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
@@ -637,7 +652,6 @@
     let ultimaActualizacionWaze = 0;
     let radaresWazeActivos = [];
 
-    // GESTIÓN DE LÍMITE DE VELOCIDAD CON FILTRO INTELIGENTE
     let limiteViaActual = null;
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
@@ -658,7 +672,6 @@
       }
     }
 
-    // SEGUNDO PLANO BLINDADO CON AUDIO REAL
     function activarAudioSegundoPlano() {
       try {
         audioSilencioso.play().then(() => {
@@ -749,7 +762,7 @@
       }
     }
 
-    // CONSULTA DEL LÍMITE DE VELOCIDAD CON PRIORIZACIÓN DE TRONCO CENTRAL
+    // CONSULTA DEL LÍMITE DE VELOCIDAD CON FILTRO INTELIGENTE
     async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
       const ahora = Date.now();
       if (ahora - ultimaConsultaLimite < 15000) return;
@@ -797,9 +810,7 @@
             }
           }
         }
-      } catch (e) {
-        // Mantiene el último límite válido en caso de microcorte
-      }
+      } catch (e) {}
     }
 
     // CONSULTA AUTOMÁTICA A WAZE VÍA CLOUDFLARE
@@ -855,7 +866,6 @@
       spdEl.innerText = vel;
       document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
 
-      // 1. Detección de límite pasando velocidad real para no caer en el 50 del lateral
       consultarLimiteVelocidadVia(lat, lon, vel);
 
       if (limiteViaActual && vel > limiteViaActual) {
@@ -868,10 +878,8 @@
         spdEl.classList.remove("danger");
       }
 
-      // 2. Consulta de móviles Waze
       consultarAlertasWaze(lat, lon);
 
-      // 3. Verificación de proximidad de radares
       let radarActivo = null;
       let distanciaMinima = Infinity;
 
