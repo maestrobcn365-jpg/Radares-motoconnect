@@ -1085,14 +1085,12 @@
     let ultimaConsultaLimite = 0;
     let ultimoAvisoExceso = 0;
 
-    // CLIMA Y POBLACIÓN
     let ultimaConsultaClima = 0;
     let ultimaPosClima = null;
     let ultimoAvisoLluvia = 0;
     let ultimaConsultaCiudad = 0;
     let ultimaCiudadDetectada = "";
 
-    // SEGURIDAD: HIELO, FATIGA Y VOZ TRÁFICO
     let ultimoAvisoHielo = 0;
     let fatigaActiva = false;
     let traficoVozActivo = true;
@@ -1101,7 +1099,6 @@
     let tiempoParadoMs = 0;
     let avisoFatigaEmitido = false;
 
-    // TELEMETRÍA
     let rutaEnCurso = {
       inicioMs: 0,
       finMs: 0,
@@ -1266,6 +1263,11 @@
         const voz = new SpeechSynthesisUtterance(texto);
         voz.lang = 'es-ES';
         voz.rate = 1.1;
+        
+        if (audioSilencioso && audioSilencioso.paused) {
+          audioSilencioso.play().catch(()=>{});
+        }
+        
         window.speechSynthesis.speak(voz);
       }
     }
