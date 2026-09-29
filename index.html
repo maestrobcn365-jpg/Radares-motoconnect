@@ -42,7 +42,7 @@
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 14px 14px;
+      padding: 6px 14px 12px;
       position: relative;
     }
 
@@ -78,7 +78,7 @@
       justify-content: space-between;
       width: 100%;
       max-width: 380px;
-      padding-top: 4px;
+      padding-top: 2px;
     }
     .header-left {
       display: flex;
@@ -86,8 +86,8 @@
       gap: 10px;
     }
     .brand-logo {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       filter: drop-shadow(0 0 8px rgba(255, 59, 48, 0.7));
       animation: pulsoRadar 2.5s infinite ease-in-out;
     }
@@ -102,7 +102,7 @@
       line-height: 1.1;
     }
     h1 {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 900;
       letter-spacing: 1.2px;
       color: #ffffff;
@@ -110,7 +110,7 @@
     }
     h1 span { color: #ff3b30; }
     .subhead {
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       color: #00e676;
       font-weight: 700;
       letter-spacing: 0.8px;
@@ -121,9 +121,9 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      padding: 6px 10px;
+      padding: 5px 9px;
       color: #00e676;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 800;
       cursor: pointer;
       display: flex;
@@ -141,24 +141,52 @@
       margin: 4px 0;
     }
 
-    /* BARRA POBLACIÓN */
+    /* BARRA POBLACIÓN Y ESTADO DE CARRETERAS */
+    .location-container {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 2px;
+    }
     .location-bar {
       background: rgba(12, 14, 18, 0.85);
       border: 1px solid rgba(0, 230, 118, 0.25);
       border-radius: 20px;
-      padding: 4px 12px;
+      padding: 3px 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: #e0f2fe;
       text-transform: uppercase;
       letter-spacing: 0.8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.4);
     }
-    .location-bar span.icon { font-size: 1rem; }
+    .location-bar span.icon { font-size: 0.9rem; }
+
+    .traffic-status-banner {
+      background: rgba(12, 14, 18, 0.9);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      border-radius: 14px;
+      padding: 3px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #00e676;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      transition: all 0.3s ease;
+    }
+    .traffic-status-banner.warning {
+      border-color: #ff9100;
+      color: #ff9100;
+      background: rgba(42, 28, 5, 0.9);
+    }
 
     /* VELOCÍMETRO GIGANTE */
     .speedometer-hero {
@@ -169,7 +197,7 @@
       padding: 2px 0;
     }
     .speed-number {
-      font-size: 5.8rem;
+      font-size: 5.4rem;
       font-weight: 900;
       line-height: 0.9;
       color: #00e676;
@@ -188,12 +216,12 @@
       to { transform: scale(1.06); }
     }
     .speed-unit {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 800;
       color: #8c9ba5;
       letter-spacing: 2px;
       text-transform: uppercase;
-      margin-top: 3px;
+      margin-top: 2px;
     }
 
     /* TARJETA DE ALERTA GIGANTE */
@@ -201,12 +229,12 @@
       display: none;
       background: linear-gradient(145deg, #320f0f, #150505);
       border: 3px solid #ff3b30;
-      border-radius: 18px;
-      padding: 10px 14px;
+      border-radius: 16px;
+      padding: 8px 12px;
       text-align: center;
       box-shadow: 0 0 30px rgba(255, 59, 48, 0.7);
       animation: pulsoAlerta 1s infinite alternate;
-      margin: 4px 0;
+      margin: 2px 0;
     }
     .alert-card.warning {
       background: linear-gradient(145deg, #382405, #1c1102);
@@ -221,13 +249,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
     }
     .traffic-sign-alert {
-      width: 74px;
-      height: 74px;
+      width: 66px;
+      height: 66px;
       background-color: #ffffff;
-      border: 7px solid #d32f2f;
+      border: 6px solid #d32f2f;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -237,59 +265,65 @@
     }
     .traffic-sign-alert span {
       color: #000000;
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
     .radar-icon-box { 
-      font-size: 3rem; 
+      font-size: 2.6rem; 
       line-height: 1; 
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
     }
     .radar-info-title {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 900;
       color: #ffffff;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-top: 4px;
+      margin-top: 3px;
     }
     .radar-info-dist {
-      font-size: 1.6rem;
+      font-size: 1.45rem;
       color: #00e676;
       font-weight: 900;
       letter-spacing: 1px;
       text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
     }
 
-    /* PESTAÑA CONTROL FATIGA */
-    .fatiga-toggle-bar {
+    /* CONTROLES / PESTAÑAS (FATIGA Y SILENCIAR TRÁFICO) */
+    .controls-row {
       display: flex;
       justify-content: center;
-      align-items: center;
-      margin: 2px 0 4px;
+      gap: 8px;
+      margin: 2px 0;
     }
-    .fatiga-btn {
+    .toggle-pill {
       background: rgba(30, 35, 42, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 0.72rem;
+      padding: 4px 10px;
+      font-size: 0.68rem;
       font-weight: 700;
       color: #8c9ba5;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.25s ease;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       user-select: none;
     }
-    .fatiga-btn.active {
+    .toggle-pill.active {
       background: rgba(0, 230, 118, 0.15);
       border-color: #00e676;
       color: #00e676;
-      box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+      box-shadow: 0 0 8px rgba(0, 230, 118, 0.25);
+    }
+    .toggle-pill.muted-active {
+      background: rgba(255, 145, 0, 0.15);
+      border-color: #ff9100;
+      color: #ff9100;
+      box-shadow: 0 0 8px rgba(255, 145, 0, 0.25);
     }
 
     /* CAJA INFERIOR */
@@ -307,7 +341,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 6px;
+      padding-bottom: 5px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       margin-bottom: 4px;
     }
@@ -318,13 +352,13 @@
       flex: 1;
     }
     .submetric .val {
-      font-size: 1.7rem;
+      font-size: 1.5rem;
       font-weight: 900;
       color: #00e676;
       line-height: 1.1;
     }
     .submetric .lbl {
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       color: #8c9ba5;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -334,10 +368,10 @@
 
     /* CHAPA LÍMITE DE VÍA */
     .speed-limit-badge {
-      width: 46px;
-      height: 46px;
+      width: 42px;
+      height: 42px;
       background-color: #ffffff;
-      border: 5px solid #d32f2f;
+      border: 4px solid #d32f2f;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -346,7 +380,7 @@
     }
     .speed-limit-badge span {
       color: #000000;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 900;
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -356,16 +390,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      height: 46px;
+      gap: 5px;
+      height: 42px;
     }
     .weather-icon {
-      font-size: 2rem;
+      font-size: 1.8rem;
       line-height: 1;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
     .weather-temp {
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       font-weight: 900;
       color: #ffffff;
     }
@@ -375,7 +409,7 @@
     }
 
     .status-row {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: #8c9ba5;
       margin: 1px 0;
       display: flex;
@@ -386,14 +420,14 @@
       background: #08090b;
       border: 1px solid #1c2229;
       border-radius: 8px;
-      height: 40px;
-      padding: 4px 8px;
-      font-size: 0.62rem;
+      height: 36px;
+      padding: 3px 6px;
+      font-size: 0.6rem;
       color: #9ab0c2;
       overflow-y: auto;
       text-align: left;
       font-family: monospace;
-      margin-top: 4px;
+      margin-top: 3px;
       line-height: 1.2;
     }
 
@@ -403,15 +437,15 @@
       border: none;
       width: 100%;
       max-width: 380px;
-      padding: 13px;
+      padding: 12px;
       border-radius: 14px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 800;
       cursor: pointer;
       letter-spacing: 0.8px;
       flex-shrink: 0;
       box-shadow: 0 4px 15px rgba(255, 59, 48, 0.35);
-      margin-top: 5px;
+      margin-top: 4px;
     }
     .btn-action.active {
       background: linear-gradient(135deg, #2b3038 0%, #1e2227 100%);
@@ -583,10 +617,16 @@
 
   <div class="main-content">
     
-    <!-- BARRA POBLACIÓN -->
-    <div class="location-bar">
-      <span class="icon">📍</span>
-      <span id="cityName">BUSCANDO ZONA...</span>
+    <!-- CONTENEDOR POBLACIÓN + ESTADO CARRETERAS -->
+    <div class="location-container">
+      <div class="location-bar">
+        <span class="icon">📍</span>
+        <span id="cityName">BUSCANDO ZONA...</span>
+      </div>
+      <div class="traffic-status-banner" id="trafficStatusBanner">
+        <span>🟢</span>
+        <span id="trafficStatusText">Estado Carreteras: Normal / Sin incidencias</span>
+      </div>
     </div>
 
     <!-- VELOCÍMETRO GIGANTE -->
@@ -607,11 +647,15 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- PESTAÑA CONTROL DE FATIGA -->
-    <div class="fatiga-toggle-bar">
-      <button type="button" class="fatiga-btn" id="fatigaToggleBtn" onclick="toggleFatiga()">
+    <!-- FILA DE CONTROLES (FATIGA + SILENCIAR VOZ TRÁFICO) -->
+    <div class="controls-row">
+      <button type="button" class="toggle-pill" id="fatigaToggleBtn" onclick="toggleFatiga()">
         <span>☕</span>
-        <span id="fatigaText">Control Fatiga: DESACTIVADO</span>
+        <span id="fatigaText">Fatiga: OFF</span>
+      </button>
+      <button type="button" class="toggle-pill" id="traficoVozToggleBtn" onclick="toggleTraficoVoz()">
+        <span>🔊</span>
+        <span id="traficoVozText">Voz Tráfico: ON</span>
       </button>
     </div>
 
@@ -874,7 +918,7 @@
       {"id":"AP7-VILADEM-31","tipo":"fijo","icone":"📷","velMax":120,"lat":42.1250,"lon":2.8950,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-FIGUER-32","tipo":"fijo","icone":"📷","velMax":120,"lat":42.2710,"lon":2.9450,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-CAPMANY-33","tipo":"fijo","icone":"📷","velMax":120,"lat":42.3680,"lon":2.9150,"rumbo":355,"distanciaAviso":650},
-      {"id":"AP7-JONQUER-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
+      {"id":"AP7-JONQUERA-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
       {"id":"C17-MONTC-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4880,"lon":2.1880,"rumbo":20,"distanciaAviso":500},
       {"id":"C17-LAFLOR-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5080,"lon":2.2020,"rumbo":200,"distanciaAviso":500},
       {"id":"C17-MOLLET-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5350,"lon":2.2150,"rumbo":200,"distanciaAviso":500},
@@ -1052,9 +1096,10 @@
     let ultimaConsultaCiudad = 0;
     let ultimaCiudadDetectada = "";
 
-    // SEGURIDAD: HIELO Y FATIGA
+    // SEGURIDAD: HIELO, FATIGA Y VOZ TRÁFICO
     let ultimoAvisoHielo = 0;
     let fatigaActiva = false;
+    let traficoVozActivo = true; // ACTIVADO POR DEFECTO
     let tiempoConduciendoMs = 0;
     let ultimoTimestampGPS = 0;
     let tiempoParadoMs = 0;
@@ -1073,8 +1118,26 @@
     let ultimoPuntoGrabadoMs = 0;
     let rutaPendienteGuardar = null;
 
+    // --- INTERRUPTOR SILENCIAR VOZ TRÁFICO ---
+    function toggleTraficoVoz() {
+      traficoVozActivo = !traficoVozActivo;
+      const btn = document.getElementById("traficoVozToggleBtn");
+      const txt = document.getElementById("traficoVozText");
+
+      if (traficoVozActivo) {
+        btn.classList.remove("muted-active");
+        btn.classList.add("active");
+        txt.innerText = "Voz Tráfico: ON";
+        locucion("Avisos de voz de tráfico activados");
+      } else {
+        btn.classList.remove("active");
+        btn.classList.add("muted-active");
+        txt.innerText = "Voz Tráfico: SILENCIADA";
+        locucion("Voz de tráfico silenciada");
+      }
+    }
+
     // --- PROTECCIÓN BOTÓN ATRÁS (GESTO DE SALIDA) ---
-    // Empuja un estado fantasma al historial cuando el sistema está activo
     function gestionarEstadoHistorial(activar) {
       if (activar) {
         history.pushState({ sistemaActivo: true }, "", window.location.href);
@@ -1086,11 +1149,9 @@
 
     function bloquearBotonAtrasEnRuta(e) {
       if (watchId !== null) {
-        // Vuelve a empujar el estado para atrapar el botón atrás de nuevo
         history.pushState({ sistemaActivo: true }, "", window.location.href);
         locucion("El avisador está activo. Minimiza la aplicación para usarla en segundo plano, o pulsa detener para salir.");
         
-        // Muestra un aviso visual flotante temporal
         let alertBox = document.getElementById("toastAlertaAtras");
         if (!alertBox) {
           alertBox = document.createElement("div");
@@ -1178,6 +1239,14 @@
         document.getElementById("roadSpeedLimit").innerText = "--";
         document.getElementById("weatherTemp").innerText = "--°";
         document.getElementById("cityName").innerText = "SISTEMA EN ESPERA";
+        
+        const bannerTráfico = document.getElementById("trafficStatusBanner");
+        if(bannerTráfico) {
+          bannerTráfico.className = "traffic-status-banner";
+          document.getElementById("trafficStatusText").innerText = "Estado Carreteras: Normal / Sin incidencias";
+          bannerTráfico.children[0].innerText = "🟢";
+        }
+
         btn.innerText = "ACTIVAR SISTEMA";
         btn.classList.remove("active");
         locucion("Avisador detenido.");
@@ -1254,7 +1323,7 @@
 
       if (fatigaActiva) {
         btn.classList.add("active");
-        txt.innerText = "Control Fatiga: ACTIVO";
+        txt.innerText = "Fatiga: ON";
         tiempoConduciendoMs = 0;
         tiempoParadoMs = 0;
         avisoFatigaEmitido = false;
@@ -1263,7 +1332,7 @@
         locucion("Control de fatiga activado");
       } else {
         btn.classList.remove("active");
-        txt.innerText = "Control Fatiga: DESACTIVADO";
+        txt.innerText = "Fatiga: OFF";
         tiempoConduciendoMs = 0;
         avisoFatigaEmitido = false;
         log("FATIGA: Desactivado.");
@@ -1573,6 +1642,20 @@
 
             actualizarEstadoContador();
 
+            const bannerTráfico = document.getElementById("trafficStatusBanner");
+            const textoTráfico = document.getElementById("trafficStatusText");
+            if (bannerTráfico && textoTráfico) {
+              if (incidenciasWazeActivas.length > 0) {
+                bannerTráfico.className = "traffic-status-banner warning";
+                textoTráfico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
+                bannerTráfico.children[0].innerText = "⚠️";
+              } else {
+                bannerTráfico.className = "traffic-status-banner";
+                textoTráfico.innerText = "Estado Carreteras: Normal / Sin incidencias";
+                bannerTráfico.children[0].innerText = "🟢";
+              }
+            }
+
             const totalWaze = radaresWazeActivos.length + incidenciasWazeActivas.length;
             if (totalWaze > 0) {
               log(`Waze: Conectado (${radaresWazeActivos.length} móviles / ${incidenciasWazeActivas.length} incidencias cerca).`);
@@ -1666,7 +1749,10 @@
           }
           if (!avisosPorVoz[inc.id]) {
             avisosPorVoz[inc.id] = true;
-            locucion(`Precaución, ${inc.tipo} a seiscientos metros`);
+            // SI LA VOZ DE TRÁFICO ESTÁ SILENCIADA, NO HABLA PERO SÍ MUESTRA EL ROTULO EN GRANDE
+            if (traficoVozActivo) {
+              locucion(`Precaución, ${inc.tipo} a seiscientos metros`);
+            }
             log(`TRÁFICO: ${inc.tipo} detectada.`);
           }
         }
