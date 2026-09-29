@@ -1237,7 +1237,7 @@
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
-      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️️";
       if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
       if ([95, 96, 99].includes(code)) return "⛈️";
@@ -1271,7 +1271,7 @@
       } catch (e) {}
     }
 
-    // --- MÓDULO CLIMA DE ALTA PRECISIÓN (REFRESCO CADA 2 MIN / 2 KM) ---
+    // --- MÓDULO CLIMA CON FILTRO ESTRICTO ANTIFALSOS POSITIVOS ---
     async function consultarClimaRuta(lat, lon, forzar = false) {
       const ahora = Date.now();
       let distDesdeUltima = Infinity;
@@ -1312,11 +1312,12 @@
               tempEl.classList.remove("freeze");
             }
 
-            if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(code)) {
-              if (ahora - ultimoAvisoLluvia > 900000) {
+            // Filtro estricto: Solo avisa si hay precipitación real moderada/fuerte (códigos oficiales de lluvia real)
+            if ([63, 65, 67, 81, 82, 95, 96, 99].includes(code)) {
+              if (ahora - ultimoAvisoLluvia > 1800000) {
                 ultimoAvisoLluvia = ahora;
-                locucion("Atención en ruta, zona con lluvia. Se espera lluvia, conduzca con cuidado.");
-                log(`CLIMA: Lluvia detectada (${temp}°C).`);
+                locucion("Atención en ruta, precipitaciones detectadas en la zona.");
+                log(`CLIMA: Lluvia real detectada (Código ${code}).`);
               }
             }
           }
@@ -1409,7 +1410,7 @@
             if (bannerTráfico && textoTráfico) {
               if (incidenciasWazeActivas.length > 0) {
                 bannerTráfico.className = "traffic-status-banner warning";
-                textoTráfico.innerText = `⚠️️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
+                textoTráfico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
                 bannerTráfico.children[0].innerText = "⚠️";
               } else {
                 bannerTráfico.className = "traffic-status-banner";
@@ -1462,7 +1463,6 @@
           rutaEnCurso.distanciaMetros += distPaso;
         }
         
-        // Rumbo vectorial estable en marcha (a partir de 4 km/h)
         if (vel > 4 && distPaso > 3) {
           rumbo = Math.round(calcularRumboVectorial(posAnterior.lat, posAnterior.lon, lat, lon));
         }
