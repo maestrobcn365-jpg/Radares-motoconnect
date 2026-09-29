@@ -757,8 +757,8 @@
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
       {"id":"BCN-TUN-ROV1","tipo":"tramo","icone":"⏱️","velMax":60,"lat":41.4250,"lon":2.1610,"rumbo":150,"distanciaAviso":500},
-      {"id":"BCN-TUN-BAD1","tipo":"tramo","icone":"⏱️️","velMax":60,"lat":41.3680,"lon":2.1380,"rumbo":310,"distanciaAviso":500},
-      // BARCELONA CIUDAD - SEMÁFOROS Y ENTORNO ESCOLAR (PASEO DE GRACIA, GRAN VIA, ARAGÓ, BALMES...)
+      {"id":"BCN-TUN-BAD1","tipo":"tramo","icone":"⏱️","velMax":60,"lat":41.3680,"lon":2.1380,"rumbo":310,"distanciaAviso":500},
+      // BARCELONA CIUDAD - SEMÁFOROS Y ENTORNO ESCOLAR
       {"id":"BCN-SEM-PGRACIA","tipo":"semáforo","icone":"🚦","velMax":30,"lat":41.3915,"lon":2.1649,"rumbo":320,"distanciaAviso":300},
       {"id":"BCN-SEM-ARAGBR","tipo":"fijo","icone":"📷","velMax":30,"lat":41.3912,"lon":2.1645,"rumbo":50,"distanciaAviso":300},
       {"id":"BCN-SEM-GRAN304","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3810,"lon":2.1620,"rumbo":60,"distanciaAviso":300},
@@ -804,7 +804,7 @@
       {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":600},
       {"id":"C31-BELLV-REM","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3450,"lon":2.1080,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":500},
-      // RESTO DE CARRETERAS CATALUÑA (A2, AP7, C16, C32, C58, B224 PIERA, ETC.)
+      // RESTO DE CARRETERAS CATALUÑA (PIERA, A2, AP7, C16, C32, C58...)
       {"id":"B224-PIERA-01","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":650},
       {"id":"B224-MASQ-02","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":650},
       {"id":"B224-CAPEL-03","tipo":"fijo","icone":"📷","velMax":60,"lat":41.5320,"lon":1.6980,"rumbo":255,"distanciaAviso":500},
@@ -1409,7 +1409,7 @@
             if (bannerTráfico && textoTráfico) {
               if (incidenciasWazeActivas.length > 0) {
                 bannerTráfico.className = "traffic-status-banner warning";
-                textoTráfico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
+                textoTráfico.innerText = `⚠️️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
                 bannerTráfico.children[0].innerText = "⚠️";
               } else {
                 bannerTráfico.className = "traffic-status-banner";
@@ -1442,13 +1442,14 @@
       }
     }
 
+    // --- PROCESAMIENTO GPS ULTRAAFINADO PARA MOTO ---
     function procesarGPS(pos) {
       document.getElementById("gpsStatus").innerText = "Activo";
       document.getElementById("gpsStatus").style.color = "#00e676";
 
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
-      const vel = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
+      const vel = pos.coords.speed !== null ? Math.max(0, Math.round(pos.coords.speed * 3.6)) : 0;
       
       if (vel > rutaEnCurso.velocidadMax) {
         rutaEnCurso.velocidadMax = vel;
@@ -1457,12 +1458,22 @@
       let rumbo = null;
       if (posAnterior) {
         const distPaso = calcularDistancia(posAnterior.lat, posAnterior.lon, lat, lon);
-        if (distPaso > 3) {
+        if (distPaso > 2) {
           rutaEnCurso.distanciaMetros += distPaso;
         }
-        if (vel > 12 && distPaso > 4) {
+        
+        // Rumbo vectorial estable en marcha (a partir de 4 km/h)
+        if (vel > 4 && distPaso > 3) {
           rumbo = Math.round(calcularRumboVectorial(posAnterior.lat, posAnterior.lon, lat, lon));
         }
+      }
+
+      if (rumbo === null && vel > 8 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+        rumbo = Math.round(pos.coords.heading);
+      }
+
+      if (posAnterior === null || calcularDistancia(posAnterior.lat, posAnterior.lon, lat, lon) > 1.5) {
+        posAnterior = { lat, lon };
       }
 
       const ahora = Date.now();
@@ -1471,14 +1482,13 @@
         rutaEnCurso.puntos.push({ lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)), vel, time: ahora });
       }
 
-      if (rumbo === null && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-        rumbo = Math.round(pos.coords.heading);
-      }
-      posAnterior = { lat, lon };
-
       const spdEl = document.getElementById("speedDisplay");
       spdEl.innerText = vel;
-      document.getElementById("headingDisplay").innerText = rumbo !== null ? rumbo : "--";
+      
+      const rumboEl = document.getElementById("headingDisplay");
+      if (rumbo !== null) {
+        rumboEl.innerText = rumbo;
+      }
 
       monitorizarFatiga(vel);
       consultarPoblacionActual(lat, lon);
@@ -1620,7 +1630,7 @@
               <div class="route-card-btns">
                 <button class="btn-small btn-small-maps" onclick="abrirRutaEnMaps(${idx})">Google Maps</button>
                 <button class="btn-small btn-small-gpx" onclick="descargarGPX(${idx})">Exportar GPX</button>
-                <button class="btn-small btn-small-del" onclick="eliminarRuta(${idx})">🗑️️</button>
+                <button class="btn-small btn-small-del" onclick="eliminarRuta(${idx})">🗑️</button>
               </div>
             </div>
           `;
