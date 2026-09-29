@@ -808,7 +808,7 @@
       {"id":"C31-CAST-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2710,"lon":1.9810,"rumbo":235,"distanciaAviso":500},
       {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
       {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
       {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
       {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
@@ -1257,18 +1257,29 @@
       }
     }
 
+    // --- MOTOR DE VOZ BLINDADO PARA CONVIVIR CON ROADSYNC ---
     function locucion(texto) {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const voz = new SpeechSynthesisUtterance(texto);
-        voz.lang = 'es-ES';
-        voz.rate = 1.1;
-        
-        if (audioSilencioso && audioSilencioso.paused) {
-          audioSilencioso.play().catch(()=>{});
+        // Aseguramos que el canal multimedia esté reproduciéndose para que el casco no ignore el audio
+        if (audioSilencioso) {
+          audioSilencioso.play().catch(() => {});
         }
+
+        window.speechSynthesis.cancel();
         
-        window.speechSynthesis.speak(voz);
+        // Retardo mínimo para permitir que RoadSync libere el canal de síntesis si acaba de hablar
+        setTimeout(() => {
+          const voz = new SpeechSynthesisUtterance(texto);
+          voz.lang = 'es-ES';
+          voz.rate = 1.15;
+          voz.pitch = 1.0;
+          
+          voz.onend = () => {
+            // Mantiene el canal activo unos instantes
+          };
+          
+          window.speechSynthesis.speak(voz);
+        }, 150);
       }
     }
 
@@ -1283,7 +1294,7 @@
         Notification.requestPermission().then((perm) => {
           if (perm === 'granted' && 'serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then((reg) => {
-              reg.showNotification("Avisador de Radares ACTIVO", {
+              reg.showNotification("Radaresconnect ACTIVO", {
                 body: "Protección en ruta activa • Pulsa para volver a la app",
                 icon: "https://cdn-icons-png.flaticon.com/192/854/854878.png",
                 tag: "radar-status",
@@ -1473,7 +1484,7 @@
     }
 
     function traducirCodigoClima(code, esNoche = false) {
-      if (code === 0) return esNoche ? "🌙" : "☀️";
+      if (code === 0) return esNoche ? "🌙" : "☀️️";
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
