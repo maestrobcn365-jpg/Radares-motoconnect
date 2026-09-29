@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Avisador de Radares - Cataluña Pro</title>
+  <title>Radaresconnect - Cataluña Pro</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -453,7 +453,7 @@
       box-shadow: none;
     }
 
-    /* MODAL DE RESUMEN Y GESTOR DE RUTAS */
+    /* MODALES */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -543,8 +543,6 @@
       font-weight: 700;
       cursor: pointer;
     }
-
-    /* LISTADO RUTAS */
     .route-card {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -647,13 +645,13 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- FILA DE CONTROLES (FATIGA + SILENCIAR VOZ TRÁFICO) -->
+    <!-- CONTROLES (FATIGA Y VOZ TRÁFICO) -->
     <div class="controls-row">
       <button type="button" class="toggle-pill" id="fatigaToggleBtn" onclick="toggleFatiga()">
         <span>☕</span>
         <span id="fatigaText">Fatiga: OFF</span>
       </button>
-      <button type="button" class="toggle-pill" id="traficoVozToggleBtn" onclick="toggleTraficoVoz()">
+      <button type="button" class="toggle-pill active" id="traficoVozToggleBtn" onclick="toggleTraficoVoz()">
         <span>🔊</span>
         <span id="traficoVozText">Voz Tráfico: ON</span>
       </button>
@@ -705,7 +703,7 @@
 
   <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
 
-  <!-- MODAL RESUMEN DE RUTA TRAS DETENER -->
+  <!-- MODAL RESUMEN -->
   <div class="modal-overlay" id="modalResumen">
     <div class="modal-box">
       <div class="modal-header">
@@ -736,16 +734,14 @@
     </div>
   </div>
 
-  <!-- MODAL LISTADO DE RUTAS GUARDADAS -->
+  <!-- MODAL HISTORIAL -->
   <div class="modal-overlay" id="modalHistorial">
     <div class="modal-box">
       <div class="modal-header">
         <h3>📂 Mis Rutas Guardadas</h3>
         <button class="close-modal" onclick="cerrarHistorialRutas()">✕</button>
       </div>
-      <div id="listaRutasContenido">
-        <!-- Renderizado dinámico -->
-      </div>
+      <div id="listaRutasContenido"></div>
     </div>
   </div>
 
@@ -918,7 +914,7 @@
       {"id":"AP7-VILADEM-31","tipo":"fijo","icone":"📷","velMax":120,"lat":42.1250,"lon":2.8950,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-FIGUER-32","tipo":"fijo","icone":"📷","velMax":120,"lat":42.2710,"lon":2.9450,"rumbo":215,"distanciaAviso":650},
       {"id":"AP7-CAPMANY-33","tipo":"fijo","icone":"📷","velMax":120,"lat":42.3680,"lon":2.9150,"rumbo":355,"distanciaAviso":650},
-      {"id":"AP7-JONQUERA-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
+      {"id":"AP7-JONQUER-34","tipo":"fijo","icone":"📷","velMax":120,"lat":42.4080,"lon":2.8810,"rumbo":355,"distanciaAviso":650},
       {"id":"C17-MONTC-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4880,"lon":2.1880,"rumbo":20,"distanciaAviso":500},
       {"id":"C17-LAFLOR-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5080,"lon":2.2020,"rumbo":200,"distanciaAviso":500},
       {"id":"C17-MOLLET-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.5350,"lon":2.2150,"rumbo":200,"distanciaAviso":500},
@@ -1099,7 +1095,7 @@
     // SEGURIDAD: HIELO, FATIGA Y VOZ TRÁFICO
     let ultimoAvisoHielo = 0;
     let fatigaActiva = false;
-    let traficoVozActivo = true; // ACTIVADO POR DEFECTO
+    let traficoVozActivo = true;
     let tiempoConduciendoMs = 0;
     let ultimoTimestampGPS = 0;
     let tiempoParadoMs = 0;
@@ -1118,7 +1114,6 @@
     let ultimoPuntoGrabadoMs = 0;
     let rutaPendienteGuardar = null;
 
-    // --- INTERRUPTOR SILENCIAR VOZ TRÁFICO ---
     function toggleTraficoVoz() {
       traficoVozActivo = !traficoVozActivo;
       const btn = document.getElementById("traficoVozToggleBtn");
@@ -1137,7 +1132,6 @@
       }
     }
 
-    // --- PROTECCIÓN BOTÓN ATRÁS (GESTO DE SALIDA) ---
     function gestionarEstadoHistorial(activar) {
       if (activar) {
         history.pushState({ sistemaActivo: true }, "", window.location.href);
@@ -1170,7 +1164,6 @@
       if (!btn) return;
 
       if (watchId === null) {
-        // 1. ACTIVAR
         activarAudioSegundoPlano();
         lanzarNotificacionSuperior();
         gestionarEstadoHistorial(true);
@@ -1223,7 +1216,6 @@
         btn.classList.add("active");
         log("Sistema, GPS y telemetría activos.");
       } else {
-        // 2. DETENER
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
         posAnterior = null;
@@ -1348,7 +1340,7 @@
 
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
-            title: "Avisador de Radares",
+            title: "Radaresconnect",
             artist: "Alerta en ruta activa",
             album: "Cataluña Pro"
           });
@@ -1557,7 +1549,7 @@
 
             if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code) && ahora - ultimoAvisoLluvia > 900000) {
               ultimoAvisoLluvia = ahora;
-              locucion("Atención en ruta, zona con lluvia");
+              locucion("Atención en ruta, zona con lluvia. Se espera lluvia, conduzca con cuidado.");
             }
           }
         }
@@ -1749,7 +1741,6 @@
           }
           if (!avisosPorVoz[inc.id]) {
             avisosPorVoz[inc.id] = true;
-            // SI LA VOZ DE TRÁFICO ESTÁ SILENCIADA, NO HABLA PERO SÍ MUESTRA EL ROTULO EN GRANDE
             if (traficoVozActivo) {
               locucion(`Precaución, ${inc.tipo} a seiscientos metros`);
             }
