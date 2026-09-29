@@ -3,7 +3,7 @@
   "short_name": "Radaresconnect",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0a0b0d",
+  "background_color": "#1a1e24",
   "theme_color": "#ff3b30",
   "icons": [
     {
