@@ -1,25 +1,20 @@
 {
-  "id": "/Radares-motoconnect/",
-  "name": "Avisador de Radares",
-  "short_name": "RadaresMoto",
-  "start_url": "/Radares-motoconnect/index.html",
-  "scope": "/Radares-motoconnect/",
+  "name": "Motoconnect",
+  "short_name": "Motoconnect",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0b0d",
   "theme_color": "#ff3b30",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/192/854/854878.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/854/854878.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
