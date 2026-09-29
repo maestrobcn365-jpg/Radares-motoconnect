@@ -1,9 +1,21 @@
+const CACHE_VERSION = 'v2-radaresconnect';
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_VERSION) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    }).then(() => clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -20,7 +32,6 @@ self.addEventListener('notificationclick', (event) => {
   notification.close();
 
   if (action === 'desactivar') {
-    // Si pulsa en el botón "Desactivar", avisa a la web para que pare el GPS y el audio
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         for (const client of clientList) {
@@ -29,7 +40,6 @@ self.addEventListener('notificationclick', (event) => {
       })
     );
   } else {
-    // Si toca el cuerpo de la notificación, vuelve a abrir y enfocar la app activa
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         for (const client of clientList) {
