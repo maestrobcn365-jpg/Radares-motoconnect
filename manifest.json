@@ -1,6 +1,6 @@
 {
-  "name": "Motoconnect",
-  "short_name": "Motoconnect",
+  "name": "Radaresconnect",
+  "short_name": "Radaresconnect",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0b0d",
