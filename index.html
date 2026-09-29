@@ -859,7 +859,7 @@
       {"id":"C32-MAT-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5450,"lon":2.4280,"rumbo":50,"distanciaAviso":650},
       {"id":"C32-AREN-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5820,"lon":2.5450,"rumbo":45,"distanciaAviso":650},
       {"id":"C32-CANET-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5980,"lon":2.5850,"rumbo":225,"distanciaAviso":650},
-      {"id":"C32-PINEDA-04","tipo":"tramo","icone":"⏱️","velMax":100,"lat":41.6320,"lon":2.6780,"rumbo":225,"distanciaAviso":650},
+      {"id":"C32-PINEDA-04","tipo":"tramo","icone":"⏱️️","velMax":100,"lat":41.6320,"lon":2.6780,"rumbo":225,"distanciaAviso":650},
       {"id":"C32-STA-SUS-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.6480,"lon":2.7150,"rumbo":50,"distanciaAviso":650},
       {"id":"N2-MONTG-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4720,"lon":2.2850,"rumbo":50,"distanciaAviso":350},
       {"id":"N2-PREM-02","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4920,"lon":2.3580,"rumbo":230,"distanciaAviso":350},
@@ -887,7 +887,7 @@
       {"id":"AP7-VANDELL-05","tipo":"fijo","icone":"📷","velMax":120,"lat":40.9980,"lon":0.9120,"rumbo":40,"distanciaAviso":650},
       {"id":"AP7-CAMBRILS-06","tipo":"fijo","icone":"📷","velMax":120,"lat":41.0850,"lon":1.0720,"rumbo":40,"distanciaAviso":650},
       {"id":"AP7-VILASECA-07","tipo":"fijo","icone":"📷","velMax":120,"lat":41.1180,"lon":1.1450,"rumbo":220,"distanciaAviso":650},
-      {"id":"AP7-CONST-08","tipo":"tramo","icone":"⏱️","velMax":120,"lat":41.1620,"lon":1.2050,"rumbo":225,"distanciaAviso":650},
+      {"id":"AP7-CONST-08","tipo":"tramo","icone":"⏱️️","velMax":120,"lat":41.1620,"lon":1.2050,"rumbo":225,"distanciaAviso":650},
       {"id":"AP7-TORRED-09","tipo":"fijo","icone":"📷","velMax":120,"lat":41.1520,"lon":1.4110,"rumbo":220,"distanciaAviso":650},
       {"id":"AP7-VENDRELL-10","tipo":"fijo","icone":"📷","velMax":120,"lat":41.2210,"lon":1.5580,"rumbo":45,"distanciaAviso":650},
       {"id":"AP7-BANYER-11","tipo":"fijo","icone":"📷","velMax":120,"lat":41.2850,"lon":1.6150,"rumbo":225,"distanciaAviso":650},
@@ -1257,27 +1257,20 @@
       }
     }
 
-    // --- MOTOR DE VOZ BLINDADO PARA CONVIVIR CON ROADSYNC ---
+    // --- MOTOR DE VOZ BLINDADO (COMPATIBLE CON ROADSYNC) ---
     function locucion(texto) {
       if ('speechSynthesis' in window) {
-        // Aseguramos que el canal multimedia esté reproduciéndose para que el casco no ignore el audio
         if (audioSilencioso) {
           audioSilencioso.play().catch(() => {});
         }
 
         window.speechSynthesis.cancel();
         
-        // Retardo mínimo para permitir que RoadSync libere el canal de síntesis si acaba de hablar
         setTimeout(() => {
           const voz = new SpeechSynthesisUtterance(texto);
           voz.lang = 'es-ES';
           voz.rate = 1.15;
           voz.pitch = 1.0;
-          
-          voz.onend = () => {
-            // Mantiene el canal activo unos instantes
-          };
-          
           window.speechSynthesis.speak(voz);
         }, 150);
       }
@@ -1484,12 +1477,12 @@
     }
 
     function traducirCodigoClima(code, esNoche = false) {
-      if (code === 0) return esNoche ? "🌙" : "☀️️";
+      if (code === 0) return esNoche ? "🌙" : "☀️";
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
       if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
-      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
+      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️️";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
       if ([95, 96, 99].includes(code)) return "⛈️";
       return "⛅";
@@ -1522,19 +1515,22 @@
       } catch (e) {}
     }
 
+    // --- MÓDULO CLIMA DE ALTA PRECISIÓN (REFRESCO CADA 2 MIN / 2 KM) ---
     async function consultarClimaRuta(lat, lon, forzar = false) {
       const ahora = Date.now();
       let distDesdeUltima = Infinity;
+      
       if (ultimaPosClima) {
         distDesdeUltima = calcularDistancia(ultimaPosClima.lat, ultimaPosClima.lon, lat, lon);
       }
 
-      if (!forzar && (ahora - ultimaConsultaClima < 300000) && distDesdeUltima < 6000) return;
+      if (!forzar && (ahora - ultimaConsultaClima < 120000) && distDesdeUltima < 2000) return;
+      
       ultimaConsultaClima = ahora;
       ultimaPosClima = { lat, lon };
 
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,is_day,weather_code&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,relative_humidity_2m,is_day,weather_code&timezone=auto`;
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
@@ -1560,13 +1556,18 @@
               tempEl.classList.remove("freeze");
             }
 
-            if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code) && ahora - ultimoAvisoLluvia > 900000) {
-              ultimoAvisoLluvia = ahora;
-              locucion("Atención en ruta, zona con lluvia. Se espera lluvia, conduzca con cuidado.");
+            if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(code)) {
+              if (ahora - ultimoAvisoLluvia > 900000) {
+                ultimoAvisoLluvia = ahora;
+                locucion("Atención en ruta, zona con lluvia. Se espera lluvia, conduzca con cuidado.");
+                log(`CLIMA: Lluvia detectada (${temp}°C).`);
+              }
             }
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        log("Clima: Error al sincronizar Open-Meteo.");
+      }
     }
 
     async function consultarLimiteVelocidadVia(lat, lon, velActual = 0) {
