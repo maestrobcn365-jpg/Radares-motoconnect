@@ -46,7 +46,6 @@
       position: relative;
     }
 
-    /* BANNER EMERGENTE SUPERIOR */
     .toast-alert {
       display: none;
       position: fixed;
@@ -141,7 +140,6 @@
       margin: 4px 0;
     }
 
-    /* BARRA POBLACIÓN Y ESTADO DE CARRETERAS */
     .location-container {
       display: flex;
       flex-direction: column;
@@ -188,7 +186,6 @@
       background: rgba(42, 28, 5, 0.9);
     }
 
-    /* VELOCÍMETRO GIGANTE */
     .speedometer-hero {
       display: flex;
       flex-direction: column;
@@ -224,7 +221,6 @@
       margin-top: 2px;
     }
 
-    /* TARJETA DE ALERTA GIGANTE */
     .alert-card {
       display: none;
       background: linear-gradient(145deg, #320f0f, #150505);
@@ -290,7 +286,6 @@
       text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
     }
 
-    /* CONTROLES / PESTAÑAS (FATIGA Y SILENCIAR TRÁFICO) */
     .controls-row {
       display: flex;
       justify-content: center;
@@ -326,7 +321,6 @@
       box-shadow: 0 0 8px rgba(255, 145, 0, 0.25);
     }
 
-    /* CAJA INFERIOR */
     .panel-bottom {
       background: rgba(22, 25, 30, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -366,7 +360,6 @@
       font-weight: 700;
     }
 
-    /* CHAPA LÍMITE DE VÍA */
     .speed-limit-badge {
       width: 42px;
       height: 42px;
@@ -385,7 +378,6 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* MÓDULO CLIMA */
     .weather-box {
       display: flex;
       align-items: center;
@@ -453,7 +445,6 @@
       box-shadow: none;
     }
 
-    /* MODALES */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -586,7 +577,6 @@
 </head>
 <body>
 
-  <!-- BANNER EMERGENTE SUPERIOR -->
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
 
   <header>
@@ -595,7 +585,7 @@
         <circle cx="50" cy="50" r="46" stroke="#ff3b30" stroke-width="4" stroke-opacity="0.4"/>
         <circle cx="50" cy="50" r="32" stroke="#ff3b30" stroke-width="3" stroke-dasharray="6 4"/>
         <circle cx="50" cy="50" r="18" stroke="#ff3b30" stroke-width="3"/>
-        <circle cx="50" cy="50" r="7" fill="#ff3b30"/>
+        <circle cx="50" cy="7" fill="#ff3b30"/>
         <path d="M50 50 L84 26" stroke="#00e676" stroke-width="3.5" stroke-linecap="round"/>
         <path d="M50 50 A46 46 0 0 1 84 26" fill="url(#radarSweep)" opacity="0.35"/>
         <defs>
@@ -610,12 +600,11 @@
         <div class="subhead">Audio BT • X10 / CAR-KIT</div>
       </div>
     </div>
-    <button class="btn-routes-icon" onclick="abrirHistorialRutas()">📂 Rutas</button>
+    <button class="btn-routes-icon" id="btnHistorial">📂 Rutas</button>
   </header>
 
   <div class="main-content">
     
-    <!-- CONTENEDOR POBLACIÓN + ESTADO CARRETERAS -->
     <div class="location-container">
       <div class="location-bar">
         <span class="icon">📍</span>
@@ -627,13 +616,11 @@
       </div>
     </div>
 
-    <!-- VELOCÍMETRO GIGANTE -->
     <div class="speedometer-hero">
       <div class="speed-number" id="speedDisplay">0</div>
       <div class="speed-unit">km/h</div>
     </div>
 
-    <!-- TARJETA ALERTA RADAR / RETENCIÓN EN GRAN FORMATO -->
     <div class="alert-card" id="radarAlertCard">
       <div class="alert-top">
         <div class="radar-icon-box" id="alertIcon">📷</div>
@@ -645,22 +632,19 @@
       <div class="radar-info-dist" id="alertDistance">A -- METROS</div>
     </div>
 
-    <!-- CONTROLES (FATIGA Y VOZ TRÁFICO) -->
     <div class="controls-row">
-      <button type="button" class="toggle-pill" id="fatigaToggleBtn" onclick="toggleFatiga()">
+      <button type="button" class="toggle-pill" id="fatigaToggleBtn">
         <span>☕</span>
         <span id="fatigaText">Fatiga: OFF</span>
       </button>
-      <button type="button" class="toggle-pill active" id="traficoVozToggleBtn" onclick="toggleTraficoVoz()">
+      <button type="button" class="toggle-pill active" id="traficoVozToggleBtn">
         <span>🔊</span>
         <span id="traficoVozText">Voz Tráfico: ON</span>
       </button>
     </div>
 
-    <!-- CAJA INFERIOR -->
     <div class="panel-bottom">
       <div class="metric-subgroup">
-        
         <div class="submetric">
           <div class="speed-limit-badge">
             <span id="roadSpeedLimit">--</span>
@@ -680,7 +664,6 @@
           <span class="val" id="headingDisplay">--</span>
           <span class="lbl">Rumbo (°)</span>
         </div>
-
       </div>
       
       <div class="status-row">
@@ -701,9 +684,8 @@
 
   </div>
 
-  <button class="btn-action" id="mainBtn" onclick="toggleSistema()">ACTIVAR SISTEMA</button>
+  <button class="btn-action" id="mainBtn">ACTIVAR SISTEMA</button>
 
-  <!-- MODAL RESUMEN -->
   <div class="modal-overlay" id="modalResumen">
     <div class="modal-box">
       <div class="modal-header">
@@ -728,18 +710,17 @@
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn-save-route" onclick="guardarRutaActual()">Guardar Ruta</button>
-        <button class="btn-discard-route" onclick="cerrarModalResumen()">Descartar</button>
+        <button class="btn-save-route" id="btnGuardarRuta">Guardar Ruta</button>
+        <button class="btn-discard-route" id="btnDescartarRuta">Descartar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL HISTORIAL -->
   <div class="modal-overlay" id="modalHistorial">
     <div class="modal-box">
       <div class="modal-header">
         <h3>📂 Mis Rutas Guardadas</h3>
-        <button class="close-modal" onclick="cerrarHistorialRutas()">✕</button>
+        <button class="close-modal" id="btnCerrarHistorial">✕</button>
       </div>
       <div id="listaRutasContenido"></div>
     </div>
@@ -751,7 +732,6 @@
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // BASE DE DATOS AMPLIADA: CATALUÑA + BARCELONA CIUDAD (TÚNELES, TRAMOS, SEMÁFOROS Y ESCOLARES)
     const baseRadares = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -980,11 +960,11 @@
         document.getElementById("weatherTemp").innerText = "--°";
         document.getElementById("cityName").innerText = "SISTEMA EN ESPERA";
         
-        const bannerTráfico = document.getElementById("trafficStatusBanner");
-        if(bannerTráfico) {
-          bannerTráfico.className = "traffic-status-banner";
+        const bannerTrafico = document.getElementById("trafficStatusBanner");
+        if(bannerTrafico) {
+          bannerTrafico.className = "traffic-status-banner";
           document.getElementById("trafficStatusText").innerText = "Estado Carreteras: Normal / Sin incidencias";
-          bannerTráfico.children[0].innerText = "🟢";
+          bannerTrafico.children[0].innerText = "🟢";
         }
 
         btn.innerText = "ACTIVAR SISTEMA";
@@ -1008,7 +988,6 @@
       }
     }
 
-    // --- MOTOR DE VOZ BLINDADO PARA CONVIVIR CON ROADSYNC ---
     function locucion(texto) {
       if ('speechSynthesis' in window) {
         if (audioSilencioso) {
@@ -1022,7 +1001,6 @@
           voz.lang = 'es-ES';
           voz.rate = 1.15;
           voz.pitch = 1.0;
-          
           window.speechSynthesis.speak(voz);
         }, 100);
       }
@@ -1267,7 +1245,6 @@
       } catch (e) {}
     }
 
-    // --- MÓDULO CLIMA CON FILTRO ESTRICTO ANTIFALSOS POSITIVOS ---
     async function consultarClimaRuta(lat, lon, forzar = false) {
       const ahora = Date.now();
       let distDesdeUltima = Infinity;
@@ -1308,7 +1285,6 @@
               tempEl.classList.remove("freeze");
             }
 
-            // Filtro estricto: Solo avisa si hay precipitación real moderada/fuerte
             if ([63, 65, 67, 81, 82, 95, 96, 99].includes(code)) {
               if (ahora - ultimoAvisoLluvia > 1800000) {
                 ultimoAvisoLluvia = ahora;
@@ -1401,17 +1377,17 @@
 
             actualizarEstadoContador();
 
-            const bannerTráfico = document.getElementById("trafficStatusBanner");
-            const textoTráfico = document.getElementById("trafficStatusText");
-            if (bannerTráfico && textoTráfico) {
+            const bannerTrafico = document.getElementById("trafficStatusBanner");
+            const textoTrafico = document.getElementById("trafficStatusText");
+            if (bannerTrafico && textoTrafico) {
               if (incidenciasWazeActivas.length > 0) {
-                bannerTráfico.className = "traffic-status-banner warning";
-                textoTráfico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
-                bannerTráfico.children[0].innerText = "⚠️";
+                bannerTrafico.className = "traffic-status-banner warning";
+                textoTrafico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
+                bannerTrafico.children[0].innerText = "⚠️";
               } else {
-                bannerTráfico.className = "traffic-status-banner";
-                textoTráfico.innerText = "Estado Carreteras: Normal / Sin incidencias";
-                bannerTráfico.children[0].innerText = "🟢";
+                bannerTrafico.className = "traffic-status-banner";
+                textoTrafico.innerText = "Estado Carreteras: Normal / Sin incidencias";
+                bannerTrafico.children[0].innerText = "🟢";
               }
             }
 
@@ -1439,7 +1415,6 @@
       }
     }
 
-    // --- PROCESAMIENTO GPS ULTRAAFINADO PARA MOTO ---
     function procesarGPS(pos) {
       document.getElementById("gpsStatus").innerText = "Activo";
       document.getElementById("gpsStatus").style.color = "#00e676";
@@ -1699,6 +1674,15 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
+      // Eventos directos del DOM sin depender de onclick en HTML
+      document.getElementById("mainBtn").addEventListener("click", toggleSistema);
+      document.getElementById("fatigaToggleBtn").addEventListener("click", toggleFatiga);
+      document.getElementById("traficoVozToggleBtn").addEventListener("click", toggleTraficoVoz);
+      document.getElementById("btnHistorial").addEventListener("click", abrirHistorialRutas);
+      document.getElementById("btnCerrarHistorial").addEventListener("click", cerrarHistorialRutas);
+      document.getElementById("btnGuardarRuta").addEventListener("click", guardarRutaActual);
+      document.getElementById("btnDescartarRuta").addEventListener("click", cerrarModalResumen);
+
       actualizarEstadoContador();
       log(`Cataluña completa: ${baseRadares.length} puntos cargados.`);
     });
