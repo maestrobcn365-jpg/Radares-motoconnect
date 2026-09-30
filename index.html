@@ -592,7 +592,7 @@
       <svg class="brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="50" cy="50" r="46" stroke="#ff3b30" stroke-width="4" stroke-opacity="0.4"/>
         <circle cx="50" cy="50" r="32" stroke="#ff3b30" stroke-width="3" stroke-dasharray="6 4"/>
-        <circle cx="50" cy="50" r="18" stroke="#ff3b30" stroke-width="3"/>
+        <circle cx="50" cy="18" stroke="#ff3b30" stroke-width="3"/>
         <circle cx="50" cy="7" fill="#ff3b30"/>
         <path d="M50 50 L84 26" stroke="#00e676" stroke-width="3.5" stroke-linecap="round"/>
         <path d="M50 50 A46 46 0 0 1 84 26" fill="url(#radarSweep)" opacity="0.35"/>
@@ -740,11 +740,11 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // Audio silencioso de fondo
+    // Audio de fondo silencioso
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // Despertador Bluetooth nativo (fuerza la apertura del canal del intercomunicador)
+    // Despertador Bluetooth nativo (abre el canal del intercomunicador)
     let audioCtx = null;
     function despertarCanalAudioBluetooth() {
       try {
@@ -767,7 +767,7 @@
       } catch (e) {}
     }
 
-    // BASE DE DATOS COMPLETA LOCAL (RESPALDO OFFLINE)
+    // BASE DE DATOS LOCAL POR DEFECTO (RESPALDO OFFLINE)
     const baseRadaresDefault = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -850,7 +850,7 @@
       {"id":"B224-SANTSAD-04","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4280,"lon":1.7850,"rumbo":18,"distanciaAviso":500},
       {"id":"C55-MONTS-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.6110,"lon":1.8620,"rumbo":345,"distanciaAviso":650},
       {"id":"C55-COLL-MOV","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.5820,"lon":1.8750,"rumbo":165,"distanciaAviso":650},
-      {"id":"C55-CASTELL-02","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.6580,"lon":1.8680,"rumbo":350,"distanciaAviso":650},
+      {"id":"C55-CASTELL-02","tipo":"tramo","icone":"⏱️️","velMax":80,"lat":41.6580,"lon":1.8680,"rumbo":350,"distanciaAviso":650},
       {"id":"C55-MANRESA-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.7120,"lon":1.8410,"rumbo":170,"distanciaAviso":650},
       {"id":"C55-SURI-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.8150,"lon":1.7650,"rumbo":340,"distanciaAviso":650},
       {"id":"C55-CARD-05","tipo":"fijo","icone":"📷","velMax":90,"lat":41.9120,"lon":1.6780,"rumbo":350,"distanciaAviso":650},
@@ -1025,7 +1025,7 @@
       {"id":"N230-PONT-03","tipo":"fijo","icone":"📷","velMax":80,"lat":42.4080,"lon":0.7450,"rumbo":355,"distanciaAviso":500},
       {"id":"N230-VIELLA-04","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.6150,"lon":0.7650,"rumbo":350,"distanciaAviso":650},
       {"id":"C26-ALFARR-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.8380,"lon":0.6150,"rumbo":85,"distanciaAviso":650},
-      {"id":"C26-FORAD-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.8750,"lon":1.0150,"rumbo":75,"distanciaAviso":650},
+      {"id":"C26-FORAD-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.8750,"lon":0.0150,"rumbo":75,"distanciaAviso":650},
       {"id":"C26-SOLSONA-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.9880,"lon":1.5050,"rumbo":255,"distanciaAviso":650},
       {"id":"C26-BERGA-04","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0950,"lon":1.8250,"rumbo":80,"distanciaAviso":650},
       {"id":"C12-AMPOSTA-01","tipo":"fijo","icone":"📷","velMax":90,"lat":40.7180,"lon":0.5780,"rumbo":335,"distanciaAviso":650},
@@ -1091,19 +1091,17 @@
 
     let baseRadares = [...baseRadaresDefault];
 
-    // FUNCIÓN DE ACTUALIZACIÓN CON URL DIRECTA (ANTI-BLOQUEO CACHÉ)
+    // FUNCIÓN DE ACTUALIZACIÓN DIRECTA (RUTA RELATIVA DIRECTA A GITHUB PAGES)
     async function actualizarBaseRadaresOficial(esManual = false) {
       if (esManual) {
-        log("Consultando actualización en GitHub...");
+        log("Consultando actualización...");
         locucion("Buscando actualización de radares...");
       }
 
       let radaresNuevos = null;
-      const URL_JSON_GITHUB = "https://maestrobcn365-jpg.github.io/Radares-motoconnect/radares-catalunya.json";
 
-      // 1. Descarga desde la URL pública de GitHub Pages
       try {
-        const res = await fetch(`${URL_JSON_GITHUB}?nocache=${Date.now()}`, { 
+        const res = await fetch("./radares-catalunya.json?t=" + Date.now(), { 
           cache: "no-store",
           headers: { "Accept": "application/json" }
         });
@@ -1114,21 +1112,10 @@
             radaresNuevos = datos;
           }
         } else {
-          log(`Aviso: Servidor respondió código ${res.status}`);
+          log(`Aviso: Código del servidor ${res.status}`);
         }
       } catch (e) {
-        // 2. Intento relativo de respaldo
-        try {
-          const resLocal = await fetch("./radares-catalunya.json?nocache=" + Date.now());
-          if (resLocal.ok) {
-            const datosLocal = await resLocal.json();
-            if (Array.isArray(datosLocal) && datosLocal.length > 0) {
-              radaresNuevos = datosLocal;
-            }
-          }
-        } catch (errLocal) {
-          log("Error de red al consultar el archivo.");
-        }
+        log("Error de lectura en radares-catalunya.json");
       }
 
       if (radaresNuevos) {
@@ -1140,7 +1127,7 @@
         return;
       }
 
-      // 3. Respaldo en la memoria interna del teléfono
+      // Si falla la red, lee el almacenamiento local persistente
       const cacheMovil = localStorage.getItem("radares_catalunya_cache");
       if (cacheMovil) {
         try {
@@ -1154,7 +1141,7 @@
         } catch (e) {}
       }
 
-      // 4. Base integrada de fábrica
+      // Base de respaldo integrada
       baseRadares = [...baseRadaresDefault];
       actualizarEstadoContador();
       if (esManual) locucion(`Base activa con ${baseRadares.length} radares`);
@@ -1242,7 +1229,7 @@
           alertBox.style.cssText = "position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:rgba(255,59,48,0.95); color:#fff; padding:8px 16px; border-radius:20px; font-size:0.75rem; font-weight:800; z-index:10001; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.6);";
           document.body.appendChild(alertBox);
         }
-        alertBox.innerText = "⚠️️ Avisador activo: Minimiza la app o pulsa DETENER";
+        alertBox.innerText = "⚠️ Avisador activo: Minimiza la app o pulsa DETENER";
         alertBox.style.display = "block";
         setTimeout(() => { alertBox.style.display = "none"; }, 4000);
       }
@@ -1550,7 +1537,7 @@
       if (card) card.style.display = "none";
     }
 
-    // --- GESTIÓN DE VOZ ESCALONADA (PRONUNCIACIÓN PRECISA DE VELOCIDAD) ---
+    // --- GESTIÓN DE VOZ ESCALONADA (PRONUNCIACIÓN DE TIPO Y VELOCIDAD) ---
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
@@ -1619,7 +1606,7 @@
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
       if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
-      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
+      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️️";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
       if ([95, 96, 99].includes(code)) return "⛈️";
       return "⛅";
@@ -1790,7 +1777,7 @@
               if (incidenciasWazeActivas.length > 0) {
                 bannerTrafico.className = "traffic-status-banner warning";
                 textoTrafico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
-                bannerTrafico.children[0].innerText = "⚠️️";
+                bannerTrafico.children[0].innerText = "⚠️";
               } else {
                 bannerTrafico.className = "traffic-status-banner";
                 textoTrafico.innerText = "Estado Carreteras: Normal / Sin incidencias";
