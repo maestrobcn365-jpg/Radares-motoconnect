@@ -864,7 +864,7 @@
       {"id":"C16-VALLV-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4150,"lon":2.0980,"rumbo":310,"distanciaAviso":500},
       {"id":"C16-SANTC-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4720,"lon":2.0710,"rumbo":130,"distanciaAviso":650},
       {"id":"C16-TERR-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5620,"lon":2.0150,"rumbo":18,"distanciaAviso":650},
-      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
+      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
       {"id":"C16-BERGA-05","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0890,"lon":1.8510,"rumbo":355,"distanciaAviso":650},
       {"id":"C16-BAG-06","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2450,"lon":1.8680,"rumbo":18,"distanciaAviso":650},
       {"id":"C16-CADI-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.2980,"lon":1.8350,"rumbo":10,"distanciaAviso":650},
@@ -1091,7 +1091,6 @@
 
     let baseRadares = [...baseRadaresDefault];
 
-    // FUNCIÓN DE ACTUALIZACIÓN DIRECTA (DESDE GITHUB O RED CARTOGRÁFICA)
     async function actualizarBaseRadaresOficial(esManual = false) {
       if (esManual) {
         log("Actualizando base oficial...");
@@ -1100,7 +1099,6 @@
 
       let radaresNuevos = null;
 
-      // 1. Intentamos descargar la base viva en tu repositorio GitHub
       try {
         const res = await fetch("radares-catalunya.json?t=" + Date.now(), { cache: "no-cache" });
         if (res.ok) {
@@ -1111,7 +1109,6 @@
         }
       } catch (e) {}
 
-      // 2. Si hay datos válidos, los guardamos en memoria local persistente
       if (radaresNuevos) {
         baseRadares = radaresNuevos;
         localStorage.setItem("radares_catalunya_cache", JSON.stringify(radaresNuevos));
@@ -1121,7 +1118,6 @@
         return;
       }
 
-      // 3. Si no hay conexión o falla la descarga, usamos el caché del móvil
       const cacheMovil = localStorage.getItem("radares_catalunya_cache");
       if (cacheMovil) {
         try {
@@ -1336,15 +1332,12 @@
     function locucion(texto) {
       if (!('speechSynthesis' in window)) return;
 
-      // 1. Tono rápido Bluetooth para abrir el canal de audio del casco antes de hablar
       despertarCanalAudioBluetooth();
 
-      // 2. Mantenemos el audio silencioso activo
       if (audioSilencioso && audioSilencioso.paused) {
         audioSilencioso.play().catch(() => {});
       }
 
-      // 3. Si la cola está congelada, forzamos reanudación
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
       }
@@ -1357,7 +1350,6 @@
         voz.rate = 1.15;
         voz.pitch = 1.0;
 
-        // VINCULACIÓN GLOBAL ANTI-GARBAGE COLLECTOR
         window._locucionCola = voz;
 
         voz.onend = () => {
@@ -1376,7 +1368,6 @@
           }
         };
 
-        // Watchdog de 6 segundos para destrabar la cola
         if (watchdogVoz) clearTimeout(watchdogVoz);
         watchdogVoz = setTimeout(() => {
           if (window.speechSynthesis.speaking) {
@@ -1533,24 +1524,30 @@
       if (card) card.style.display = "none";
     }
 
+    // --- GESTIÓN DE VOZ ESCALONADA CON TIPO DE RADAR Y VELOCIDAD ---
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
       }
 
       const estado = avisosPorVoz[radar.id];
-      const limiteTexto = typeof radar.velMax === 'number' ? `límite ${radar.velMax}` : 'precaución';
+      const tipoRadar = radar.tipo ? radar.tipo.toLowerCase() : "fijo";
+      const tipoTexto = tipoRadar.includes("radar") ? tipoRadar : `radar ${tipoRadar}`;
+      const velocidadTexto = (typeof radar.velMax === 'number' && radar.velMax > 0) ? `límite ${radar.velMax}` : 'precaución';
 
+      // 1. Primer aviso a 600 metros
       if (dist <= 620 && dist > 320 && !estado.fase600) {
         estado.fase600 = true;
-        log(`VOZ: ${radar.tipo} a 600m`);
-        locucion(`Atención, ${radar.tipo} a seiscientos metros, ${limiteTexto}`);
+        log(`VOZ: ${tipoTexto} a 600m (${velocidadTexto})`);
+        locucion(`Atención, ${tipoTexto} a seiscientos metros, ${velocidadTexto}`);
       }
+      // 2. Segundo aviso a 250 metros
       else if (dist <= 270 && dist > 90 && !estado.fase250) {
         estado.fase250 = true;
-        log(`VOZ: A 250 metros`);
-        locucion(`A doscientos cincuenta metros`);
+        log(`VOZ: A 250 metros (${tipoTexto}, ${velocidadTexto})`);
+        locucion(`A doscientos cincuenta metros, ${tipoTexto}, ${velocidadTexto}`);
       }
+      // 3. Confirmación en el punto de control
       else if (dist <= 50 && !estado.faseFin) {
         estado.faseFin = true;
         log(`VOZ: Punto de control`);
@@ -1977,7 +1974,7 @@
                 <span style="color:#00e676;">${r.distanciaKm} km</span>
               </div>
               <div class="route-card-info">
-                📅 ${r.fecha} • ⏱️️ ${r.tiempoMin} min<br>
+                📅 ${r.fecha} • ⏱️ ${r.tiempoMin} min<br>
                 🚀 Vel. Máx: ${r.velMax} km/h • Media: ${r.velMed} km/h
               </div>
               <div class="route-card-btns">
@@ -2064,12 +2061,10 @@
       document.getElementById("btnGuardarRuta").addEventListener("click", guardarRutaActual);
       document.getElementById("btnDescartarRuta").addEventListener("click", cerrarModalResumen);
       
-      // Botón manual de actualización rápida de BD
       document.getElementById("btnActualizarBD").addEventListener("click", () => {
         actualizarBaseRadaresOficial(true);
       });
 
-      // Actualización automática al abrir
       actualizarBaseRadaresOficial(false);
     });
   </script>
