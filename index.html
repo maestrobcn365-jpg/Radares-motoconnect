@@ -753,12 +753,10 @@
 
     // BASE DE DATOS AMPLIADA: CATALUÑA + BARCELONA CIUDAD (TÚNELES, TRAMOS, SEMÁFOROS Y ESCOLARES)
     const baseRadares = [
-      // BARCELONA CIUDAD - TÚNELES Y RONDAS
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
       {"id":"BCN-TUN-ROV1","tipo":"tramo","icone":"⏱️","velMax":60,"lat":41.4250,"lon":2.1610,"rumbo":150,"distanciaAviso":500},
       {"id":"BCN-TUN-BAD1","tipo":"tramo","icone":"⏱️","velMax":60,"lat":41.3680,"lon":2.1380,"rumbo":310,"distanciaAviso":500},
-      // BARCELONA CIUDAD - SEMÁFOROS Y ENTORNO ESCOLAR
       {"id":"BCN-SEM-PGRACIA","tipo":"semáforo","icone":"🚦","velMax":30,"lat":41.3915,"lon":2.1649,"rumbo":320,"distanciaAviso":300},
       {"id":"BCN-SEM-ARAGBR","tipo":"fijo","icone":"📷","velMax":30,"lat":41.3912,"lon":2.1645,"rumbo":50,"distanciaAviso":300},
       {"id":"BCN-SEM-GRAN304","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3810,"lon":2.1620,"rumbo":60,"distanciaAviso":300},
@@ -766,7 +764,6 @@
       {"id":"BCN-ESC-BALMES","tipo":"fijo","icone":"📷","velMax":30,"lat":41.4050,"lon":2.1420,"rumbo":320,"distanciaAviso":250},
       {"id":"BCN-ESC-CONSELL","tipo":"fijo","icone":"📷","velMax":30,"lat":41.3930,"lon":2.1690,"rumbo":65,"distanciaAviso":250},
       {"id":"BCN-ESC-NUMANC","tipo":"fijo","icone":"📷","velMax":30,"lat":41.3830,"lon":2.1350,"rumbo":220,"distanciaAviso":250},
-      // RONDAS Y ACCESOS
       {"id":"BCN-B20-01","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4398,"lon":2.1985,"rumbo":135,"distanciaAviso":450},
       {"id":"BCN-B20-02","tipo":"fijo","icone":"📷","velMax":60,"lat":41.4112,"lon":2.1450,"rumbo":220,"distanciaAviso":450},
       {"id":"BCN-B20-03","tipo":"fijo","icone":"📷","velMax":70,"lat":41.3985,"lon":2.1120,"rumbo":210,"distanciaAviso":450},
@@ -790,7 +787,6 @@
       {"id":"BCN-MALL-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4020,"lon":2.1760,"rumbo":50,"distanciaAviso":350},
       {"id":"BCN-GRAN-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3680,"lon":2.1380,"rumbo":230,"distanciaAviso":350},
       {"id":"BCN-GRAN-02","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4150,"lon":2.2020,"rumbo":45,"distanciaAviso":350},
-      // BADALONA Y AREA METROPOLITANA
       {"id":"BDN-SEM-MAR","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4450,"lon":2.2380,"rumbo":130,"distanciaAviso":250},
       {"id":"BDN-SEM-ALF","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4390,"lon":2.2290,"rumbo":40,"distanciaAviso":250},
       {"id":"BDN-SEM-FRAN","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4510,"lon":2.2460,"rumbo":50,"distanciaAviso":250},
@@ -804,7 +800,6 @@
       {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":600},
       {"id":"C31-BELLV-REM","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3450,"lon":2.1080,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":500},
-      // RESTO DE CARRETERAS CATALUÑA (PIERA, A2, AP7, C16, C32, C58...)
       {"id":"B224-PIERA-01","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":650},
       {"id":"B224-MASQ-02","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":650},
       {"id":"B224-CAPEL-03","tipo":"fijo","icone":"📷","velMax":60,"lat":41.5320,"lon":1.6980,"rumbo":255,"distanciaAviso":500},
@@ -819,7 +814,7 @@
       {"id":"AP7-GELIDA-14","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4410,"lon":1.8820,"rumbo":230,"distanciaAviso":650},
       {"id":"AP7-RUBI-16","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4820,"lon":2.0150,"rumbo":45,"distanciaAviso":650},
       {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C58-MONT-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4920,"lon":2.1680,"rumbo":330,"distanciaAviso":650},
       {"id":"C58-RIP-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5120,"lon":2.1480,"rumbo":150,"distanciaAviso":650}
     ];
@@ -1013,9 +1008,10 @@
       }
     }
 
-    // --- MOTOR DE VOZ BLINDADO (COMPATIBLE CON ROADSYNC) ---
+    // --- MOTOR DE VOZ BLINDADO PARA CONVIVIR CON ROADSYNC ---
     function locucion(texto) {
       if ('speechSynthesis' in window) {
+        // Despierta el canal de audio del casco antes de emitir la síntesis
         if (audioSilencioso) {
           audioSilencioso.play().catch(() => {});
         }
@@ -1027,8 +1023,10 @@
           voz.lang = 'es-ES';
           voz.rate = 1.15;
           voz.pitch = 1.0;
+          
+          // Forzamos el flujo prioritario para evitar el bloqueo del navegador
           window.speechSynthesis.speak(voz);
-        }, 150);
+        }, 100);
       }
     }
 
@@ -1233,11 +1231,11 @@
     }
 
     function traducirCodigoClima(code, esNoche = false) {
-      if (code === 0) return esNoche ? "🌙" : "☀️";
+      if (code === 0) return esNoche ? "🌙" : "☀️️";
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
-      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
       if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
       if ([95, 96, 99].includes(code)) return "⛈️";
@@ -1312,7 +1310,7 @@
               tempEl.classList.remove("freeze");
             }
 
-            // Filtro estricto: Solo avisa si hay precipitación real moderada/fuerte (códigos oficiales de lluvia real)
+            // Filtro estricto: Solo avisa si hay precipitación real moderada/fuerte
             if ([63, 65, 67, 81, 82, 95, 96, 99].includes(code)) {
               if (ahora - ultimoAvisoLluvia > 1800000) {
                 ultimoAvisoLluvia = ahora;
