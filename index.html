@@ -82,11 +82,11 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
     .brand-logo {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       filter: drop-shadow(0 0 8px rgba(255, 59, 48, 0.7));
       animation: pulsoRadar 2.5s infinite ease-in-out;
     }
@@ -101,33 +101,41 @@
       line-height: 1.1;
     }
     h1 {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 900;
-      letter-spacing: 1.2px;
+      letter-spacing: 1px;
       color: #ffffff;
       text-transform: uppercase;
     }
     h1 span { color: #ff3b30; }
     .subhead {
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       color: #00e676;
       font-weight: 700;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
     }
 
-    .btn-routes-icon {
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-header-action {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      padding: 5px 9px;
+      padding: 5px 8px;
       color: #00e676;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      transition: background 0.2s ease;
+    }
+    .btn-header-action:active {
+      background: rgba(0, 230, 118, 0.2);
     }
 
     .main-content {
@@ -600,7 +608,10 @@
         <div class="subhead">Audio BT • X10 / CAR-KIT</div>
       </div>
     </div>
-    <button class="btn-routes-icon" id="btnHistorial">📂 Rutas</button>
+    <div class="header-actions">
+      <button class="btn-header-action" id="btnActualizarBD" title="Actualizar base oficial de radares">🔄 BD</button>
+      <button class="btn-header-action" id="btnHistorial">📂 Rutas</button>
+    </div>
   </header>
 
   <div class="main-content">
@@ -729,11 +740,11 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // Audio silencioso persistente
+    // Audio silencioso de fondo
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // Generador de pitido Bluetooth nativo (despierta el canal del casco de inmediato)
+    // Despertador Bluetooth nativo (fuerza la apertura del canal del intercomunicador)
     let audioCtx = null;
     function despertarCanalAudioBluetooth() {
       try {
@@ -746,7 +757,7 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Tono de aviso a 880Hz
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
         osc.connect(gain);
@@ -756,7 +767,7 @@
       } catch (e) {}
     }
 
-    // BASE DE DATOS COMPLETA DE CATALUÑA + BARCELONA
+    // BASE DE DATOS COMPLETA LOCAL (RESPALDO OFFLINE)
     const baseRadaresDefault = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -1080,34 +1091,52 @@
 
     let baseRadares = [...baseRadaresDefault];
 
-    async function cargarBaseRadaresAuto() {
-      const guardados = localStorage.getItem("radares_catalunya_cache");
-      if (guardados) {
-        try {
-          const datos = JSON.parse(guardados);
+    // FUNCIÓN DE ACTUALIZACIÓN DIRECTA (DESDE GITHUB O RED CARTOGRÁFICA)
+    async function actualizarBaseRadaresOficial(esManual = false) {
+      if (esManual) {
+        log("Actualizando base oficial...");
+        locucion("Descargando actualización de radares...");
+      }
+
+      let radaresNuevos = null;
+
+      // 1. Intentamos descargar la base viva en tu repositorio GitHub
+      try {
+        const res = await fetch("radares-catalunya.json?t=" + Date.now(), { cache: "no-cache" });
+        if (res.ok) {
+          const datos = await res.json();
           if (Array.isArray(datos) && datos.length > 50) {
-            baseRadares = datos;
+            radaresNuevos = datos;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Si hay datos válidos, los guardamos en memoria local persistente
+      if (radaresNuevos) {
+        baseRadares = radaresNuevos;
+        localStorage.setItem("radares_catalunya_cache", JSON.stringify(radaresNuevos));
+        actualizarEstadoContador();
+        log(`BD: Actualizada (${radaresNuevos.length} radares guardados).`);
+        if (esManual) locucion(`Base de datos actualizada con ${radaresNuevos.length} puntos`);
+        return;
+      }
+
+      // 3. Si no hay conexión o falla la descarga, usamos el caché del móvil
+      const cacheMovil = localStorage.getItem("radares_catalunya_cache");
+      if (cacheMovil) {
+        try {
+          const guardados = JSON.parse(cacheMovil);
+          if (Array.isArray(guardados) && guardados.length > 50) {
+            baseRadares = guardados;
             actualizarEstadoContador();
+            if (esManual) locucion("Base de datos cargada desde la memoria");
+            return;
           }
         } catch (e) {}
       }
 
-      try {
-        const res = await fetch("radares-catalunya.json", { cache: "no-cache" });
-        if (res.ok) {
-          const remotos = await res.json();
-          if (Array.isArray(remotos) && remotos.length > 50) {
-            baseRadares = remotos;
-            localStorage.setItem("radares_catalunya_cache", JSON.stringify(remotos));
-            log(`Base remota sincronizada: ${remotos.length} radares.`);
-            actualizarEstadoContador();
-            return;
-          }
-        }
-      } catch (err) {}
-
       actualizarEstadoContador();
-      log(`Base activa: ${baseRadares.length} radares cargados.`);
+      if (esManual) locucion("No hay conexión para actualizar");
     }
 
     let watchId = null;
@@ -1320,7 +1349,6 @@
         window.speechSynthesis.resume();
       }
 
-      // Cancelamos locución previa para dar paso al nuevo aviso prioritario
       window.speechSynthesis.cancel();
 
       setTimeout(() => {
@@ -1330,7 +1358,6 @@
         voz.pitch = 1.0;
 
         // VINCULACIÓN GLOBAL ANTI-GARBAGE COLLECTOR
-        // Evita que Android destruya la locución en memoria a mitad de frase
         window._locucionCola = voz;
 
         voz.onend = () => {
@@ -1349,7 +1376,7 @@
           }
         };
 
-        // Watchdog: si el motor de voz de Android no responde en 6 segundos, lo reinicia
+        // Watchdog de 6 segundos para destrabar la cola
         if (watchdogVoz) clearTimeout(watchdogVoz);
         watchdogVoz = setTimeout(() => {
           if (window.speechSynthesis.speaking) {
@@ -1950,7 +1977,7 @@
                 <span style="color:#00e676;">${r.distanciaKm} km</span>
               </div>
               <div class="route-card-info">
-                📅 ${r.fecha} • ⏱️ ${r.tiempoMin} min<br>
+                📅 ${r.fecha} • ⏱️️ ${r.tiempoMin} min<br>
                 🚀 Vel. Máx: ${r.velMax} km/h • Media: ${r.velMed} km/h
               </div>
               <div class="route-card-btns">
@@ -2036,8 +2063,14 @@
       document.getElementById("btnCerrarHistorial").addEventListener("click", cerrarHistorialRutas);
       document.getElementById("btnGuardarRuta").addEventListener("click", guardarRutaActual);
       document.getElementById("btnDescartarRuta").addEventListener("click", cerrarModalResumen);
+      
+      // Botón manual de actualización rápida de BD
+      document.getElementById("btnActualizarBD").addEventListener("click", () => {
+        actualizarBaseRadaresOficial(true);
+      });
 
-      cargarBaseRadaresAuto();
+      // Actualización automática al abrir
+      actualizarBaseRadaresOficial(false);
     });
   </script>
 </body>
