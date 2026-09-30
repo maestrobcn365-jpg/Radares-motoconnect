@@ -740,11 +740,9 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // Audio silencioso de fondo
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // Despertador Bluetooth nativo (fuerza la apertura del canal del intercomunicador)
     let audioCtx = null;
     function despertarCanalAudioBluetooth() {
       try {
@@ -767,7 +765,6 @@
       } catch (e) {}
     }
 
-    // BASE DE DATOS COMPLETA LOCAL (RESPALDO OFFLINE)
     const baseRadaresDefault = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -864,7 +861,7 @@
       {"id":"C16-VALLV-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4150,"lon":2.0980,"rumbo":310,"distanciaAviso":500},
       {"id":"C16-SANTC-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4720,"lon":2.0710,"rumbo":130,"distanciaAviso":650},
       {"id":"C16-TERR-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5620,"lon":2.0150,"rumbo":18,"distanciaAviso":650},
-      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
+      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
       {"id":"C16-BERGA-05","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0890,"lon":1.8510,"rumbo":355,"distanciaAviso":650},
       {"id":"C16-BAG-06","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2450,"lon":1.8680,"rumbo":18,"distanciaAviso":650},
       {"id":"C16-CADI-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.2980,"lon":1.8350,"rumbo":10,"distanciaAviso":650},
@@ -1325,7 +1322,6 @@
       }
     }
 
-    // --- MOTOR DE VOZ BLINDADO TOTAL (ANTI-CONGELACIÓN ANDROID / ROADSYNC) ---
     window._locucionCola = null;
     let watchdogVoz = null;
 
@@ -1512,7 +1508,8 @@
         card.classList.remove("warning");
         sign.style.borderColor = "#d32f2f";
         document.getElementById("alertIcon").innerText = radar.icone || "📷";
-        document.getElementById("alertSpeedSign").innerText = typeof radar.velMax === 'number' ? radar.velMax : "!";
+        const v = parseInt(radar.velMax, 10);
+        document.getElementById("alertSpeedSign").innerText = !isNaN(v) && v > 0 ? v : "!";
         document.getElementById("alertTypeTitle").innerText = `RADAR ${radar.tipo.toUpperCase()}`;
         document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
       }
@@ -1524,7 +1521,7 @@
       if (card) card.style.display = "none";
     }
 
-    // --- GESTIÓN DE VOZ ESCALONADA CON TIPO DE RADAR Y VELOCIDAD ---
+    // --- GESTIÓN DE VOZ ESCALONADA CORREGIDA PARA PRONUNCIAR SIEMPRE LA VELOCIDAD ---
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
@@ -1533,7 +1530,10 @@
       const estado = avisosPorVoz[radar.id];
       const tipoRadar = radar.tipo ? radar.tipo.toLowerCase() : "fijo";
       const tipoTexto = tipoRadar.includes("radar") ? tipoRadar : `radar ${tipoRadar}`;
-      const velocidadTexto = (typeof radar.velMax === 'number' && radar.velMax > 0) ? `límite ${radar.velMax}` : 'precaución';
+      
+      // Conversión obligada a entero para que nunca falle la lectura si viene como texto
+      const vMax = parseInt(radar.velMax, 10);
+      const velocidadTexto = (!isNaN(vMax) && vMax > 0) ? `límite ${vMax}` : 'precaución';
 
       // 1. Primer aviso a 600 metros
       if (dist <= 620 && dist > 320 && !estado.fase600) {
@@ -1547,7 +1547,7 @@
         log(`VOZ: A 250 metros (${tipoTexto}, ${velocidadTexto})`);
         locucion(`A doscientos cincuenta metros, ${tipoTexto}, ${velocidadTexto}`);
       }
-      // 3. Confirmación en el punto de control
+      // 3. Confirmación en el punto exacto
       else if (dist <= 50 && !estado.faseFin) {
         estado.faseFin = true;
         log(`VOZ: Punto de control`);
@@ -1590,7 +1590,7 @@
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
-      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️️";
       if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
       if ([95, 96, 99].includes(code)) return "⛈️";
