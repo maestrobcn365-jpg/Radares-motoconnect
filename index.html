@@ -585,6 +585,9 @@
 </head>
 <body>
 
+  <!-- ELEMENTO DE AUDIO NATIVO MULTIMEDIA PARA ABRIR EL CANAL BLUETOOTH -->
+  <audio id="audioBeepAviso" preload="auto" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LFciUFLI7L8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMj"></audio>
+
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
 
   <header>
@@ -740,34 +743,22 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // Audio silencioso de fondo para mantener vivo el proceso en segundo plano
+    // Audio silencioso de fondo para mantener vivo el proceso
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // Despertador Bluetooth nativo (fuerza la apertura del canal de voz del intercomunicador)
-    let audioCtx = null;
-    function despertarCanalAudioBluetooth() {
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
-      } catch (e) {}
+    // Despertador de audio Bluetooth: reproduce un tono multimedia HTML5
+    // Esto obliga a Android a abrir el canal A2DP del intercomunicador
+    function forzarCanalBluetooth() {
+      const audioTag = document.getElementById("audioBeepAviso");
+      if (audioTag) {
+        audioTag.currentTime = 0;
+        audioTag.volume = 0.8;
+        audioTag.play().catch(() => {});
+      }
     }
 
-    // BASE DE DATOS LOCAL POR DEFECTO (RESPALDO OFFLINE)
+    // BASE DE DATOS LOCAL DE RESPALDO (+318 RADARES)
     const baseRadaresDefault = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -808,6 +799,9 @@
       {"id":"BCN-MALL-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4020,"lon":2.1760,"rumbo":50,"distanciaAviso":350},
       {"id":"BCN-GRAN-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3680,"lon":2.1380,"rumbo":230,"distanciaAviso":350},
       {"id":"BCN-GRAN-02","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4150,"lon":2.2020,"rumbo":45,"distanciaAviso":350},
+      {"id":"BCN-SEM-NUMA","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3820,"lon":2.1380,"rumbo":315,"distanciaAviso":250},
+      {"id":"BCN-SEM-URGEL","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3860,"lon":2.1540,"rumbo":135,"distanciaAviso":250},
+      {"id":"BCN-SEM-MALL2","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.3970,"lon":2.1680,"rumbo":50,"distanciaAviso":250},
       {"id":"BDN-SEM-MAR","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4450,"lon":2.2380,"rumbo":130,"distanciaAviso":250},
       {"id":"BDN-SEM-ALF","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4390,"lon":2.2290,"rumbo":40,"distanciaAviso":250},
       {"id":"BDN-SEM-FRAN","tipo":"semáforo","icone":"🚦","velMax":50,"lat":41.4510,"lon":2.2460,"rumbo":50,"distanciaAviso":250},
@@ -817,36 +811,49 @@
       {"id":"STACOL-B20-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4520,"lon":2.2080,"rumbo":35,"distanciaAviso":500},
       {"id":"STACOL-B20-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4460,"lon":2.2010,"rumbo":215,"distanciaAviso":500},
       {"id":"MONT-C31-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4650,"lon":2.2780,"rumbo":45,"distanciaAviso":500},
-      {"id":"B20-TR-INI","tipo":"tramo","icone":"⏱️️","velMax":80,"lat":41.4610,"lon":2.2230,"rumbo":215,"distanciaAviso":600},
+      {"id":"B20-TR-INI","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4610,"lon":2.2230,"rumbo":215,"distanciaAviso":600},
       {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":600},
       {"id":"C31-BELLV-REM","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3450,"lon":2.1080,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":500},
-      {"id":"B224-PIERA-01","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":650},
-      {"id":"B224-MASQ-02","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":650},
-      {"id":"B224-CAPEL-03","tipo":"fijo","icone":"📷","velMax":60,"lat":41.5320,"lon":1.6980,"rumbo":255,"distanciaAviso":500},
-      {"id":"B224-SANTSAD-04","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4280,"lon":1.7850,"rumbo":18,"distanciaAviso":500},
+      {"id":"C31-VILAD-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2980,"lon":2.0380,"rumbo":55,"distanciaAviso":500},
+      {"id":"C31-GAV-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2850,"lon":2.0150,"rumbo":55,"distanciaAviso":500},
+      {"id":"C31-CAST-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2710,"lon":1.9810,"rumbo":235,"distanciaAviso":500},
+      {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
+      {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
+      {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
+      {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
+      {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
+      {"id":"B23-MOLINS-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4080,"lon":2.0150,"rumbo":70,"distanciaAviso":500},
       {"id":"A2-CORB-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4380,"lon":1.9720,"rumbo":290,"distanciaAviso":650},
       {"id":"A2-PALL-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4580,"lon":1.9480,"rumbo":110,"distanciaAviso":650},
       {"id":"A2-STVIC-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.3980,"lon":2.0110,"rumbo":280,"distanciaAviso":650},
       {"id":"A2-MART-04","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4810,"lon":1.9180,"rumbo":110,"distanciaAviso":650},
       {"id":"A2-ABR-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5180,"lon":1.8950,"rumbo":295,"distanciaAviso":650},
+      {"id":"A2-COLL-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.5720,"lon":1.8310,"rumbo":275,"distanciaAviso":650},
+      {"id":"A2-BRUC-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5830,"lon":1.7780,"rumbo":260,"distanciaAviso":650},
+      {"id":"A2-CASTELL-06","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5910,"lon":1.7150,"rumbo":80,"distanciaAviso":650},
+      {"id":"A2-IGUA-07","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5920,"lon":1.6520,"rumbo":90,"distanciaAviso":650},
+      {"id":"A2-JORBA-08","tipo":"fijo","icone":"📷","velMax":120,"lat":41.6050,"lon":1.5420,"rumbo":270,"distanciaAviso":650},
+      {"id":"B224-PIERA-01","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":650},
+      {"id":"B224-MASQ-02","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":650},
+      {"id":"B224-CAPEL-03","tipo":"fijo","icone":"📷","velMax":60,"lat":41.5320,"lon":1.6980,"rumbo":255,"distanciaAviso":500},
+      {"id":"B224-SANTSAD-04","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4280,"lon":1.7850,"rumbo":18,"distanciaAviso":500},
       {"id":"AP7-VILAFR-12","tipo":"fijo","icone":"📷","velMax":120,"lat":41.3480,"lon":1.7050,"rumbo":45,"distanciaAviso":650},
       {"id":"AP7-SANTSAD-13","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4120,"lon":1.7950,"rumbo":45,"distanciaAviso":650},
       {"id":"AP7-GELIDA-14","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4410,"lon":1.8820,"rumbo":230,"distanciaAviso":650},
       {"id":"AP7-RUBI-16","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4820,"lon":2.0150,"rumbo":45,"distanciaAviso":650},
-      {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C58-MONT-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4920,"lon":2.1680,"rumbo":330,"distanciaAviso":650},
       {"id":"C58-RIP-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5120,"lon":2.1480,"rumbo":150,"distanciaAviso":650}
     ];
 
     let baseRadares = [...baseRadaresDefault];
 
-    // ACTUALIZACIÓN DE BASE DE DATOS (CONEXIÓN RELATIVA Y LIMPIEZA JSON)
+    // CARGA Y ACTUALIZACIÓN LIMPIA DE BASE DE DATOS
     async function actualizarBaseRadaresOficial(esManual = false) {
       if (esManual) {
         log("Consultando actualización...");
-        locucion("Buscando actualización de radares...");
+        locucion("Buscando actualización de radares");
       }
 
       let radaresNuevos = null;
@@ -867,14 +874,14 @@
           }
         }
       } catch (e) {
-        log("Error de lectura en radares-catalunya.json");
+        log("Lectura directa: usando respaldo");
       }
 
       if (radaresNuevos) {
         baseRadares = radaresNuevos;
         localStorage.setItem("radares_catalunya_cache", JSON.stringify(radaresNuevos));
         actualizarEstadoContador();
-        log(`BD: Actualizada (${radaresNuevos.length} radares guardados).`);
+        log(`BD: Sincronizada (${radaresNuevos.length} radares).`);
         if (esManual) locucion(`Base de datos actualizada con ${radaresNuevos.length} puntos`);
         return;
       }
@@ -970,7 +977,7 @@
     function bloquearBotonAtrasEnRuta(e) {
       if (watchId !== null) {
         history.pushState({ sistemaActivo: true }, "", window.location.href);
-        locucion("El avisador está activo. Minimiza la aplicación para usarla en segundo plano, o pulsa detener para salir.");
+        locucion("El avisador está activo. Minimiza la aplicación para usarla en segundo plano.");
         
         let alertBox = document.getElementById("toastAlertaAtras");
         if (!alertBox) {
@@ -993,7 +1000,7 @@
         activarAudioSegundoPlano();
         lanzarNotificacionSuperior();
         gestionarEstadoHistorial(true);
-        despertarCanalAudioBluetooth();
+        forzarCanalBluetooth();
 
         tiempoConduciendoMs = 0;
         tiempoParadoMs = 0;
@@ -1087,27 +1094,26 @@
       }
     }
 
-    // --- MOTOR DE VOZ BLINDADO CONTRA CONGELACIÓN EN ANDROID / BLUETOOTH ---
-    window._locucionActiva = null;
-    let timerDesatasco = null;
+    // --- MOTOR DE VOZ BLINDADO PARA INTERCOMUNICADOR BLUETOOTH ---
+    window._vozEnReproduccion = null;
+    let timerVozWatchdog = null;
 
     function locucion(texto) {
       if (!('speechSynthesis' in window)) return;
 
-      // 1. Despierta el canal de audio del casco antes de hablar
-      despertarCanalAudioBluetooth();
+      // 1. Tono multimedia previo por elemento HTML5 (fuerza salida hacia el auricular Bluetooth)
+      forzarCanalBluetooth();
 
-      // 2. Reactiva el audio silencioso si el móvil lo dejó en reposo
+      // 2. Despierta el canal de fondo
       if (audioSilencioso && audioSilencioso.paused) {
         audioSilencioso.play().catch(() => {});
       }
 
-      // 3. Forzar reanudación si Android suspendió la síntesis
+      // 3. Destraba el sintetizador si Android lo suspendió
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
       }
 
-      // Vaciar la cola anterior
       window.speechSynthesis.cancel();
 
       setTimeout(() => {
@@ -1115,28 +1121,34 @@
         voz.lang = 'es-ES';
         voz.rate = 1.15;
         voz.pitch = 1.0;
+        voz.volume = 1.0;
 
-        window._locucionActiva = voz;
+        // Selección explícita de la voz en español disponible
+        const voces = window.speechSynthesis.getVoices();
+        const vozEs = voces.find(v => v.lang.startsWith("es"));
+        if (vozEs) voz.voice = vozEs;
+
+        window._vozEnReproduccion = voz;
 
         voz.onstart = () => {
-          if (timerDesatasco) {
-            clearTimeout(timerDesatasco);
-            timerDesatasco = null;
+          if (timerVozWatchdog) {
+            clearTimeout(timerVozWatchdog);
+            timerVozWatchdog = null;
           }
         };
 
         voz.onend = () => {
-          window._locucionActiva = null;
+          window._vozEnReproduccion = null;
         };
 
         voz.onerror = () => {
-          window._locucionActiva = null;
+          window._vozEnReproduccion = null;
           window.speechSynthesis.cancel();
         };
 
-        // Si Android no arranca la voz en 400ms, reinicia el motor
-        if (timerDesatasco) clearTimeout(timerDesatasco);
-        timerDesatasco = setTimeout(() => {
+        // Si Android no arranca a hablar en 400ms, fuerza el ciclo
+        if (timerVozWatchdog) clearTimeout(timerVozWatchdog);
+        timerVozWatchdog = setTimeout(() => {
           if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
             window.speechSynthesis.resume();
@@ -1144,7 +1156,7 @@
         }, 400);
 
         window.speechSynthesis.speak(voz);
-      }, 70);
+      }, 80);
     }
 
     function lanzarNotificacionSuperior() {
@@ -1293,7 +1305,7 @@
       if (card) card.style.display = "none";
     }
 
-    // --- GESTIÓN DE VOZ ESCALONADA (PRONUNCIACIÓN PRECISA DE VELOCIDAD) ---
+    // --- GESTIÓN DE VOZ ESCALONADA (PRONUNCIACIÓN CLARA DE TIPO Y VELOCIDAD) ---
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
@@ -1363,8 +1375,8 @@
       if ([45, 48].includes(code)) return "🌫️";
       if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
       if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
-      if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️️";
-      if ([95, 96, 99].includes(code)) return "⛈️️";
+      if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+      if ([95, 96, 99].includes(code)) return "⛈️";
       return "⛅";
     }
 
