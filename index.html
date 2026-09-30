@@ -585,7 +585,7 @@
 </head>
 <body>
 
-  <!-- ELEMENTO DE AUDIO NATIVO MULTIMEDIA PARA ABRIR EL CANAL BLUETOOTH -->
+  <!-- ELEMENTO MULTIMEDIA PARA ABRIR CANAL BLUETOOTH -->
   <audio id="audioBeepAviso" preload="auto" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LFciUFLI7L8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMj"></audio>
 
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
@@ -743,12 +743,9 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
-    // Audio silencioso de fondo para mantener vivo el proceso
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // Despertador de audio Bluetooth: reproduce un tono multimedia HTML5
-    // Esto obliga a Android a abrir el canal A2DP del intercomunicador
     function forzarCanalBluetooth() {
       const audioTag = document.getElementById("audioBeepAviso");
       if (audioTag) {
@@ -758,7 +755,7 @@
       }
     }
 
-    // BASE DE DATOS LOCAL DE RESPALDO (+318 RADARES)
+    // BASE DE DATOS LOCAL POR DEFECTO (+318 RADARES)
     const baseRadaresDefault = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -815,41 +812,27 @@
       {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":600},
       {"id":"C31-BELLV-REM","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3450,"lon":2.1080,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":500},
-      {"id":"C31-VILAD-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2980,"lon":2.0380,"rumbo":55,"distanciaAviso":500},
-      {"id":"C31-GAV-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2850,"lon":2.0150,"rumbo":55,"distanciaAviso":500},
-      {"id":"C31-CAST-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2710,"lon":1.9810,"rumbo":235,"distanciaAviso":500},
-      {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
-      {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
-      {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
-      {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
-      {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
-      {"id":"B23-MOLINS-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4080,"lon":2.0150,"rumbo":70,"distanciaAviso":500},
+      {"id":"B224-PIERA-01","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":650},
+      {"id":"B224-MASQ-02","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":650},
+      {"id":"B224-CAPEL-03","tipo":"fijo","icone":"📷","velMax":60,"lat":41.5320,"lon":1.6980,"rumbo":255,"distanciaAviso":500},
+      {"id":"B224-SANTSAD-04","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4280,"lon":1.7850,"rumbo":18,"distanciaAviso":500},
       {"id":"A2-CORB-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4380,"lon":1.9720,"rumbo":290,"distanciaAviso":650},
       {"id":"A2-PALL-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4580,"lon":1.9480,"rumbo":110,"distanciaAviso":650},
       {"id":"A2-STVIC-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.3980,"lon":2.0110,"rumbo":280,"distanciaAviso":650},
       {"id":"A2-MART-04","tipo":"fijo","icone":"📷","velMax":100,"lat":41.4810,"lon":1.9180,"rumbo":110,"distanciaAviso":650},
       {"id":"A2-ABR-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5180,"lon":1.8950,"rumbo":295,"distanciaAviso":650},
-      {"id":"A2-COLL-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.5720,"lon":1.8310,"rumbo":275,"distanciaAviso":650},
-      {"id":"A2-BRUC-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5830,"lon":1.7780,"rumbo":260,"distanciaAviso":650},
-      {"id":"A2-CASTELL-06","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5910,"lon":1.7150,"rumbo":80,"distanciaAviso":650},
-      {"id":"A2-IGUA-07","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5920,"lon":1.6520,"rumbo":90,"distanciaAviso":650},
-      {"id":"A2-JORBA-08","tipo":"fijo","icone":"📷","velMax":120,"lat":41.6050,"lon":1.5420,"rumbo":270,"distanciaAviso":650},
-      {"id":"B224-PIERA-01","tipo":"móvil habitual","icone":"🚗","velMax":60,"lat":41.5215,"lon":1.7580,"rumbo":85,"distanciaAviso":650},
-      {"id":"B224-MASQ-02","tipo":"móvil habitual","icone":"🚗","velMax":90,"lat":41.4980,"lon":1.8150,"rumbo":270,"distanciaAviso":650},
-      {"id":"B224-CAPEL-03","tipo":"fijo","icone":"📷","velMax":60,"lat":41.5320,"lon":1.6980,"rumbo":255,"distanciaAviso":500},
-      {"id":"B224-SANTSAD-04","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4280,"lon":1.7850,"rumbo":18,"distanciaAviso":500},
       {"id":"AP7-VILAFR-12","tipo":"fijo","icone":"📷","velMax":120,"lat":41.3480,"lon":1.7050,"rumbo":45,"distanciaAviso":650},
       {"id":"AP7-SANTSAD-13","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4120,"lon":1.7950,"rumbo":45,"distanciaAviso":650},
       {"id":"AP7-GELIDA-14","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4410,"lon":1.8820,"rumbo":230,"distanciaAviso":650},
       {"id":"AP7-RUBI-16","tipo":"fijo","icone":"📷","velMax":120,"lat":41.4820,"lon":2.0150,"rumbo":45,"distanciaAviso":650},
+      {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C58-MONT-01","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4920,"lon":2.1680,"rumbo":330,"distanciaAviso":650},
       {"id":"C58-RIP-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5120,"lon":2.1480,"rumbo":150,"distanciaAviso":650}
     ];
 
     let baseRadares = [...baseRadaresDefault];
 
-    // CARGA Y ACTUALIZACIÓN LIMPIA DE BASE DE DATOS
     async function actualizarBaseRadaresOficial(esManual = false) {
       if (esManual) {
         log("Consultando actualización...");
@@ -1123,7 +1106,6 @@
         voz.pitch = 1.0;
         voz.volume = 1.0;
 
-        // Selección explícita de la voz en español disponible
         const voces = window.speechSynthesis.getVoices();
         const vozEs = voces.find(v => v.lang.startsWith("es"));
         if (vozEs) voz.voice = vozEs;
@@ -1146,7 +1128,6 @@
           window.speechSynthesis.cancel();
         };
 
-        // Si Android no arranca a hablar en 400ms, fuerza el ciclo
         if (timerVozWatchdog) clearTimeout(timerVozWatchdog);
         timerVozWatchdog = setTimeout(() => {
           if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
@@ -1305,7 +1286,7 @@
       if (card) card.style.display = "none";
     }
 
-    // --- GESTIÓN DE VOZ ESCALONADA (PRONUNCIACIÓN CLARA DE TIPO Y VELOCIDAD) ---
+    // --- GESTIÓN DE VOZ ESCALONADA (PRONUNCIACIÓN DE TIPO Y VELOCIDAD) ---
     function gestionarVozEscalonada(radar, dist) {
       if (!avisosPorVoz[radar.id]) {
         avisosPorVoz[radar.id] = { fase600: false, fase250: false, faseFin: false };
@@ -1407,6 +1388,7 @@
       } catch (e) {}
     }
 
+    // --- MÓDULO CLIMA BLINDADO (OPEN-METEO VÍA CURRENT_WEATHER) ---
     async function consultarClimaRuta(lat, lon, forzar = false) {
       const ahora = Date.now();
       let distDesdeUltima = Infinity;
@@ -1415,36 +1397,44 @@
         distDesdeUltima = calcularDistancia(ultimaPosClima.lat, ultimaPosClima.lon, lat, lon);
       }
 
-      if (!forzar && (ahora - ultimaConsultaClima < 120000) && distDesdeUltima < 2000) return;
+      if (!forzar && (ahora - ultimaConsultaClima < 120000) && distDesdeUltima < 3000) return;
       
       ultimaConsultaClima = ahora;
       ultimaPosClima = { lat, lon };
 
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,relative_humidity_2m,is_day,weather_code&timezone=auto`;
-        const res = await fetch(url);
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current_weather=true&timezone=auto`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const data = await res.json();
-          if (data && data.current) {
-            const temp = Math.round(data.current.temperature_2m);
-            const code = data.current.weather_code;
-            const esNoche = data.current.is_day === 0;
+          if (data && data.current_weather) {
+            const cw = data.current_weather;
+            const temp = Math.round(cw.temperature);
+            const code = cw.weathercode;
+            const esNoche = cw.is_day === 0;
 
             const icon = traducirCodigoClima(code, esNoche);
             const tempEl = document.getElementById("weatherTemp");
+            const iconEl = document.getElementById("weatherIcon");
             
-            document.getElementById("weatherIcon").innerText = icon;
-            tempEl.innerText = `${temp}°`;
+            if (iconEl) iconEl.innerText = icon;
+            if (tempEl) {
+              tempEl.innerText = `${temp}°`;
 
-            if (temp <= 3) {
-              tempEl.classList.add("freeze");
-              if (ahora - ultimoAvisoHielo > 2700000) {
-                ultimoAvisoHielo = ahora;
-                locucion(`Atención: temperatura de ${temp} grados. Precaución por posible hielo o asfalto frío.`);
-                log(`HIELO: Alerta de asfalto frío (${temp}°C).`);
+              if (temp <= 3) {
+                tempEl.classList.add("freeze");
+                if (ahora - ultimoAvisoHielo > 2700000) {
+                  ultimoAvisoHielo = ahora;
+                  locucion(`Atención: temperatura de ${temp} grados. Precaución por posible hielo o asfalto frío.`);
+                  log(`HIELO: Alerta de asfalto frío (${temp}°C).`);
+                }
+              } else {
+                tempEl.classList.remove("freeze");
               }
-            } else {
-              tempEl.classList.remove("freeze");
             }
 
             if ([63, 65, 67, 81, 82, 95, 96, 99].includes(code)) {
@@ -1457,7 +1447,7 @@
           }
         }
       } catch (e) {
-        log("Clima: Error al sincronizar Open-Meteo.");
+        ultimaConsultaClima = ahora - 90000;
       }
     }
 
@@ -1535,7 +1525,7 @@
 
             incidenciasWazeActivas = alertas
               .filter(a => a.tipo && ['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
-              .map(a => ({ ...a, distanciaAviso: 800, icone: a.icone || "🚗⚠️" }));
+              .map(a => ({ ...a, distanciaAviso: 800, icone: a.icone || "🚗⚠️️" }));
 
             actualizarEstadoContador();
 
