@@ -654,7 +654,7 @@
 
         <div class="submetric">
           <div class="weather-box">
-            <span class="weather-icon" id="weatherIcon">☀️</span>
+            <span class="weather-icon" id="weatherIcon">☀️️</span>
             <span class="weather-temp" id="weatherTemp">--°</span>
           </div>
           <span class="lbl">Clima Ruta</span>
@@ -732,9 +732,9 @@
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // BASE DE DATOS COMPLETA DE CATALUÑA + BARCELONA
-    const baseRadares = [
-      {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
+    // BASE DE RESPALDO INTEGRADA (CATALUÑA + BARCELONA CIUDAD)
+    const baseRadaresDefault = [
+      {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
       {"id":"BCN-TUN-ROV1","tipo":"tramo","icone":"⏱️","velMax":60,"lat":41.4250,"lon":2.1610,"rumbo":150,"distanciaAviso":500},
       {"id":"BCN-TUN-BAD1","tipo":"tramo","icone":"⏱️","velMax":60,"lat":41.3680,"lon":2.1380,"rumbo":310,"distanciaAviso":500},
@@ -785,7 +785,7 @@
       {"id":"STACOL-B20-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4520,"lon":2.2080,"rumbo":35,"distanciaAviso":500},
       {"id":"STACOL-B20-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4460,"lon":2.2010,"rumbo":215,"distanciaAviso":500},
       {"id":"MONT-C31-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4650,"lon":2.2780,"rumbo":45,"distanciaAviso":500},
-      {"id":"B20-TR-INI","tipo":"tramo","icone":"⏱️️","velMax":80,"lat":41.4610,"lon":2.2230,"rumbo":215,"distanciaAviso":600},
+      {"id":"B20-TR-INI","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4610,"lon":2.2230,"rumbo":215,"distanciaAviso":600},
       {"id":"B20-TR-FIN","tipo":"tramo","icone":"⏱️","velMax":80,"lat":41.4430,"lon":2.1950,"rumbo":215,"distanciaAviso":600},
       {"id":"C31-BELLV-REM","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3450,"lon":2.1080,"rumbo":235,"distanciaAviso":500},
       {"id":"C31-AERO-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3120,"lon":2.0650,"rumbo":235,"distanciaAviso":500},
@@ -794,7 +794,7 @@
       {"id":"C31-CAST-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2710,"lon":1.9810,"rumbo":235,"distanciaAviso":500},
       {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
       {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
       {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
       {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
@@ -829,7 +829,7 @@
       {"id":"C16-VALLV-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4150,"lon":2.0980,"rumbo":310,"distanciaAviso":500},
       {"id":"C16-SANTC-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4720,"lon":2.0710,"rumbo":130,"distanciaAviso":650},
       {"id":"C16-TERR-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5620,"lon":2.0150,"rumbo":18,"distanciaAviso":650},
-      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
+      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
       {"id":"C16-BERGA-05","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0890,"lon":1.8510,"rumbo":355,"distanciaAviso":650},
       {"id":"C16-BAG-06","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2450,"lon":1.8680,"rumbo":18,"distanciaAviso":650},
       {"id":"C16-CADI-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.2980,"lon":1.8350,"rumbo":10,"distanciaAviso":650},
@@ -1054,6 +1054,38 @@
       {"id":"N260-PORTB-16","tipo":"fijo","icone":"📷","velMax":60,"lat":42.4250,"lon":3.1550,"rumbo":355,"distanciaAviso":450}
     ];
 
+    let baseRadares = [...baseRadaresDefault];
+
+    async function cargarBaseRadaresAuto() {
+      const guardados = localStorage.getItem("radares_catalunya_cache");
+      if (guardados) {
+        try {
+          const datos = JSON.parse(guardados);
+          if (Array.isArray(datos) && datos.length > 50) {
+            baseRadares = datos;
+            actualizarEstadoContador();
+          }
+        } catch (e) {}
+      }
+
+      try {
+        const res = await fetch("radares-catalunya.json", { cache: "no-cache" });
+        if (res.ok) {
+          const remotos = await res.json();
+          if (Array.isArray(remotos) && remotos.length > 50) {
+            baseRadares = remotos;
+            localStorage.setItem("radares_catalunya_cache", JSON.stringify(remotos));
+            log(`Base remota actualizada: ${remotos.length} radares.`);
+            actualizarEstadoContador();
+            return;
+          }
+        }
+      } catch (err) {}
+
+      actualizarEstadoContador();
+      log(`Base activa: ${baseRadares.length} radares cargados.`);
+    }
+
     let watchId = null;
     let wakeLock = null;
     const avisosPorVoz = {};
@@ -1243,6 +1275,7 @@
       }
     }
 
+    // --- MOTOR DE VOZ BLINDADO PARA CONVIVIR CON ROADSYNC ---
     function locucion(texto) {
       if ('speechSynthesis' in window) {
         if (audioSilencioso) {
@@ -1466,7 +1499,7 @@
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
-      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️️";
+      if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
       if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
       if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
       if ([95, 96, 99].includes(code)) return "⛈️";
@@ -1937,8 +1970,7 @@
       document.getElementById("btnGuardarRuta").addEventListener("click", guardarRutaActual);
       document.getElementById("btnDescartarRuta").addEventListener("click", cerrarModalResumen);
 
-      actualizarEstadoContador();
-      log(`Cataluña completa: ${baseRadares.length} puntos cargados.`);
+      cargarBaseRadaresAuto();
     });
   </script>
 </body>
