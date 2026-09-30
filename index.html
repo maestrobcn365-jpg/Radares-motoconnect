@@ -585,7 +585,7 @@
         <circle cx="50" cy="50" r="46" stroke="#ff3b30" stroke-width="4" stroke-opacity="0.4"/>
         <circle cx="50" cy="50" r="32" stroke="#ff3b30" stroke-width="3" stroke-dasharray="6 4"/>
         <circle cx="50" cy="50" r="18" stroke="#ff3b30" stroke-width="3"/>
-        <circle cx="50" cy="50" r="7" fill="#ff3b30"/>
+        <circle cx="50" cy="7" fill="#ff3b30"/>
         <path d="M50 50 L84 26" stroke="#00e676" stroke-width="3.5" stroke-linecap="round"/>
         <path d="M50 50 A46 46 0 0 1 84 26" fill="url(#radarSweep)" opacity="0.35"/>
         <defs>
@@ -654,7 +654,7 @@
 
         <div class="submetric">
           <div class="weather-box">
-            <span class="weather-icon" id="weatherIcon">☀️️</span>
+            <span class="weather-icon" id="weatherIcon">☀️</span>
             <span class="weather-temp" id="weatherTemp">--°</span>
           </div>
           <span class="lbl">Clima Ruta</span>
@@ -729,10 +729,34 @@
   <script>
     const URL_PROXY_WAZE = "https://waze-radar-proxy.maestrobcn365.workers.dev";
 
+    // Audio silencioso persistente
     const audioSilencioso = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     audioSilencioso.loop = true;
 
-    // BASE DE RESPALDO INTEGRADA (CATALUÑA + BARCELONA CIUDAD)
+    // Generador de pitido Bluetooth nativo (despierta el canal del casco de inmediato)
+    let audioCtx = null;
+    function despertarCanalAudioBluetooth() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Tono de aviso a 880Hz
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } catch (e) {}
+    }
+
+    // BASE DE DATOS COMPLETA DE CATALUÑA + BARCELONA
     const baseRadaresDefault = [
       {"id":"BCN-TUN-GLOR1","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4065,"lon":2.1885,"rumbo":45,"distanciaAviso":450},
       {"id":"BCN-TUN-GLOR2","tipo":"tramo","icone":"⏱️","velMax":50,"lat":41.4110,"lon":2.1950,"rumbo":225,"distanciaAviso":450},
@@ -1075,7 +1099,7 @@
           if (Array.isArray(remotos) && remotos.length > 50) {
             baseRadares = remotos;
             localStorage.setItem("radares_catalunya_cache", JSON.stringify(remotos));
-            log(`Base remota actualizada: ${remotos.length} radares.`);
+            log(`Base remota sincronizada: ${remotos.length} radares.`);
             actualizarEstadoContador();
             return;
           }
@@ -1182,6 +1206,7 @@
         activarAudioSegundoPlano();
         lanzarNotificacionSuperior();
         gestionarEstadoHistorial(true);
+        despertarCanalAudioBluetooth();
 
         tiempoConduciendoMs = 0;
         tiempoParadoMs = 0;
@@ -1275,23 +1300,65 @@
       }
     }
 
-    // --- MOTOR DE VOZ BLINDADO PARA CONVIVIR CON ROADSYNC ---
-    function locucion(texto) {
-      if ('speechSynthesis' in window) {
-        if (audioSilencioso) {
-          audioSilencioso.play().catch(() => {});
-        }
+    // --- MOTOR DE VOZ BLINDADO TOTAL (ANTI-CONGELACIÓN ANDROID / ROADSYNC) ---
+    window._locucionCola = null;
+    let watchdogVoz = null;
 
-        window.speechSynthesis.cancel();
-        
-        setTimeout(() => {
-          const voz = new SpeechSynthesisUtterance(texto);
-          voz.lang = 'es-ES';
-          voz.rate = 1.15;
-          voz.pitch = 1.0;
-          window.speechSynthesis.speak(voz);
-        }, 100);
+    function locucion(texto) {
+      if (!('speechSynthesis' in window)) return;
+
+      // 1. Tono rápido Bluetooth para abrir el canal de audio del casco antes de hablar
+      despertarCanalAudioBluetooth();
+
+      // 2. Mantenemos el audio silencioso activo
+      if (audioSilencioso && audioSilencioso.paused) {
+        audioSilencioso.play().catch(() => {});
       }
+
+      // 3. Si la cola está congelada, forzamos reanudación
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
+      // Cancelamos locución previa para dar paso al nuevo aviso prioritario
+      window.speechSynthesis.cancel();
+
+      setTimeout(() => {
+        const voz = new SpeechSynthesisUtterance(texto);
+        voz.lang = 'es-ES';
+        voz.rate = 1.15;
+        voz.pitch = 1.0;
+
+        // VINCULACIÓN GLOBAL ANTI-GARBAGE COLLECTOR
+        // Evita que Android destruya la locución en memoria a mitad de frase
+        window._locucionCola = voz;
+
+        voz.onend = () => {
+          window._locucionCola = null;
+          if (watchdogVoz) {
+            clearTimeout(watchdogVoz);
+            watchdogVoz = null;
+          }
+        };
+
+        voz.onerror = () => {
+          window._locucionCola = null;
+          if (watchdogVoz) {
+            clearTimeout(watchdogVoz);
+            watchdogVoz = null;
+          }
+        };
+
+        // Watchdog: si el motor de voz de Android no responde en 6 segundos, lo reinicia
+        if (watchdogVoz) clearTimeout(watchdogVoz);
+        watchdogVoz = setTimeout(() => {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+          }
+        }, 6000);
+
+        window.speechSynthesis.speak(voz);
+      }, 90);
     }
 
     function lanzarNotificacionSuperior() {
