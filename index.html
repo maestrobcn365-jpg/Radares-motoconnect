@@ -593,7 +593,7 @@
 </head>
 <body>
 
-  <!-- ELEMENTO MULTIMEDIA PARA ABRIR CANAL BLUETOOTH -->
+  <!-- ELEMENTO MULTIMEDIA PARA ABRIR CANAL BLUETOOTH CON PANTALLA BLOQUEADA -->
   <audio id="audioBeepAviso" preload="auto" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LFciUFLI7L8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMj"></audio>
 
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
@@ -762,7 +762,7 @@
       const audioTag = document.getElementById("audioBeepAviso");
       if (audioTag) {
         audioTag.currentTime = 0;
-        audioTag.volume = 0.8;
+        audioTag.volume = 0.9;
         audioTag.play().catch(() => {});
       }
     }
@@ -828,7 +828,7 @@
       {"id":"C31-CAST-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2710,"lon":1.9810,"rumbo":235,"distanciaAviso":500},
       {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
       {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
       {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
       {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
@@ -879,7 +879,7 @@
       {"id":"C32-MAT-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5450,"lon":2.4280,"rumbo":50,"distanciaAviso":650},
       {"id":"C32-AREN-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5820,"lon":2.5450,"rumbo":45,"distanciaAviso":650},
       {"id":"C32-CANET-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5980,"lon":2.5850,"rumbo":225,"distanciaAviso":650},
-      {"id":"C32-PINEDA-04","tipo":"tramo","icone":"⏱️","velMax":100,"lat":41.6320,"lon":2.6780,"rumbo":225,"distanciaAviso":650},
+      {"id":"C32-PINEDA-04","tipo":"tramo","icone":"⏱️️","velMax":100,"lat":41.6320,"lon":2.6780,"rumbo":225,"distanciaAviso":650},
       {"id":"C32-STA-SUS-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.6480,"lon":2.7150,"rumbo":50,"distanciaAviso":650},
       {"id":"N2-MONTG-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4720,"lon":2.2850,"rumbo":50,"distanciaAviso":350},
       {"id":"N2-PREM-02","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4920,"lon":2.3580,"rumbo":230,"distanciaAviso":350},
@@ -1334,63 +1334,32 @@
       }
     }
 
-    window._vozEnReproduccion = null;
-    let timerVozWatchdog = null;
-
+    // --- MOTOR DE AUDIO MULTIMEDIA BLUETOOTH (ANTI-BLOQUEO DE PANTALLA) ---
     function locucion(texto) {
       if (!('speechSynthesis' in window)) return;
 
+      // 1. Forzar apertura de canal multimedia A2DP del casco mediante el elemento de audio real
       forzarCanalBluetooth();
 
+      // 2. Mantener vivo el hilo secundario
       if (audioSilencioso && audioSilencioso.paused) {
         audioSilencioso.play().catch(() => {});
       }
 
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-
-      window.speechSynthesis.cancel();
-
+      // 3. Ejecutar la voz con reanudación forzada para evitar el modo reposo de Android
       setTimeout(() => {
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        
         const voz = new SpeechSynthesisUtterance(texto);
         voz.lang = 'es-ES';
         voz.rate = 1.15;
         voz.pitch = 1.0;
         voz.volume = 1.0;
 
-        const voces = window.speechSynthesis.getVoices();
-        const vozEs = voces.find(v => v.lang.startsWith("es"));
-        if (vozEs) voz.voice = vozEs;
-
-        window._vozEnReproduccion = voz;
-
-        voz.onstart = () => {
-          if (timerVozWatchdog) {
-            clearTimeout(timerVozWatchdog);
-            timerVozWatchdog = null;
-          }
-        };
-
-        voz.onend = () => {
-          window._vozEnReproduccion = null;
-        };
-
-        voz.onerror = () => {
-          window._vozEnReproduccion = null;
-          window.speechSynthesis.cancel();
-        };
-
-        if (timerVozWatchdog) clearTimeout(timerVozWatchdog);
-        timerVozWatchdog = setTimeout(() => {
-          if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.resume();
-          }
-        }, 400);
-
         window.speechSynthesis.speak(voz);
-      }, 80);
+      }, 100);
     }
 
     function lanzarNotificacionSuperior() {
@@ -1548,7 +1517,6 @@
       const estado = avisosPorVoz[radar.id];
       const ahora = Date.now();
 
-      // CANDADO DE SEGURIDAD: Evita que el GPS sature la voz si ya cantó hace menos de 35 segundos
       if (ahora - estado.ultimoAvisoMs < 35000) return;
 
       const tipoRadar = radar.tipo ? radar.tipo.toLowerCase() : "fijo";
@@ -1557,21 +1525,18 @@
       const vMax = parseInt(radar.velMax, 10);
       const velocidadTexto = (!isNaN(vMax) && vMax > 0) ? `límite ${vMax}` : 'precaución';
 
-      // 1. Primer aviso a 600 metros
       if (dist <= 620 && dist > 320 && !estado.fase600) {
         estado.fase600 = true;
         estado.ultimoAvisoMs = ahora;
         log(`VOZ: ${tipoTexto} a 600m (${velocidadTexto})`);
         locucion(`Atención, ${tipoTexto} a seiscientos metros, ${velocidadTexto}`);
       }
-      // 2. Segundo aviso a 250 metros
       else if (dist <= 270 && dist > 90 && !estado.fase250) {
         estado.fase250 = true;
         estado.ultimoAvisoMs = ahora;
         log(`VOZ: A 250 metros (${tipoTexto}, ${velocidadTexto})`);
         locucion(`A doscientos cincuenta metros, ${tipoTexto}, ${velocidadTexto}`);
       }
-      // 3. Confirmación en el punto exacto
       else if (dist <= 50 && !estado.faseFin) {
         estado.faseFin = true;
         estado.ultimoAvisoMs = ahora;
@@ -1612,7 +1577,7 @@
 
     function traducirCodigoClima(code, esNoche = false) {
       if (code === 0) return esNoche ? "🌙" : "☀️";
-      if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
+      if (code === 1 || code === 2) return esNoche ? "☁️️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
       if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
