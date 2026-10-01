@@ -297,23 +297,23 @@
     .controls-row {
       display: flex;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       margin: 2px 0;
     }
     .toggle-pill {
       background: rgba(30, 35, 42, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 20px;
-      padding: 4px 8px;
-      font-size: 0.62rem;
+      padding: 4px 7px;
+      font-size: 0.58rem;
       font-weight: 700;
       color: #8c9ba5;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       transition: all 0.25s ease;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
       user-select: none;
     }
     .toggle-pill.active {
@@ -332,9 +332,6 @@
       background: rgba(56, 189, 248, 0.15);
       border-color: #38bdf8;
       color: #38bdf8;
-    }
-    .toggle-pill.test-btn:active {
-      background: rgba(56, 189, 248, 0.35);
     }
 
     .panel-bottom {
@@ -663,6 +660,10 @@
         <span>🔊</span>
         <span>Probar Voz</span>
       </button>
+      <button type="button" class="toggle-pill active" id="modoAutoToggleBtn">
+        <span>⚙️</span>
+        <span id="modoAutoText">Modo: Auto</span>
+      </button>
       <button type="button" class="toggle-pill active" id="traficoVozToggleBtn">
         <span>📢</span>
         <span id="traficoVozText">Voz: ON</span>
@@ -694,7 +695,7 @@
       
       <div class="status-row">
         <span>Estado GPS:</span>
-        <span id="gpsStatus" style="color: #ff9100; font-weight: 600;">En espera (Auto >10km/h)</span>
+        <span id="gpsStatus" style="color: #ff9100; font-weight: 600;">En espera (Modo Auto)</span>
       </div>
       <div class="status-row">
         <span>Segundo Plano:</span>
@@ -705,7 +706,7 @@
         <span id="dbStatus" style="color: #00e676; font-weight: 600;">Cargando...</span>
       </div>
 
-      <div class="log-box" id="logBox">> Base lista. Supera 10 km/h para auto-activar.</div>
+      <div class="log-box" id="logBox">> Base lista. Elige modo Auto o Manual.</div>
     </div>
 
   </div>
@@ -863,7 +864,7 @@
       {"id":"C16-VALLV-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4150,"lon":2.0980,"rumbo":310,"distanciaAviso":500},
       {"id":"C16-SANTC-02","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4720,"lon":2.0710,"rumbo":130,"distanciaAviso":650},
       {"id":"C16-TERR-03","tipo":"fijo","icone":"📷","velMax":90,"lat":41.5620,"lon":2.0150,"rumbo":18,"distanciaAviso":650},
-      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
+      {"id":"C16-NAV-04","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.8350,"lon":1.8790,"rumbo":10,"distanciaAviso":650},
       {"id":"C16-BERGA-05","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0890,"lon":1.8510,"rumbo":355,"distanciaAviso":650},
       {"id":"C16-BAG-06","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2450,"lon":1.8680,"rumbo":18,"distanciaAviso":650},
       {"id":"C16-CADI-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.2980,"lon":1.8350,"rumbo":10,"distanciaAviso":650},
@@ -1001,7 +1002,7 @@
       {"id":"LL12-LLEIDA-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5950,"lon":0.6280,"rumbo":185,"distanciaAviso":650},
       {"id":"C14-SALOU-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.0950,"lon":1.1350,"rumbo":345,"distanciaAviso":500},
       {"id":"C14-REUS-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.1780,"lon":1.1250,"rumbo":335,"distanciaAviso":650},
-      {"id":"C14-ALCOVER-03","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2580,"lon":1.1820,"rumbo":155,"distanciaAviso":650},
+      {"id":"C14-ALCOVER-03","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2580,"lon":1.1820,"rumbo":155,"distanciaAviso":650},
       {"id":"C14-MONTBL-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.3850,"lon":1.1710,"rumbo":340,"distanciaAviso":650},
       {"id":"C14-SOLIVE-05","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4550,"lon":1.2050,"rumbo":160,"distanciaAviso":650},
       {"id":"C14-TARREGA-06","tipo":"fijo","icone":"📷","velMax":90,"lat":41.6320,"lon":1.1350,"rumbo":160,"distanciaAviso":650},
@@ -1170,6 +1171,9 @@
     let ultimoAvisoHielo = 0;
     let fatigaActiva = false;
     let traficoVozActivo = true;
+    let modoAutoActivo = true; // Selector Auto / Manual (Por defecto en Auto)
+    let intentoAutoActivacion = false;
+
     let tiempoConduciendoMs = 0;
     let ultimoTimestampGPS = 0;
     let tiempoParadoMs = 0;
@@ -1186,6 +1190,26 @@
     };
     let ultimoPuntoGrabadoMs = 0;
     let rutaPendienteGuardar = null;
+
+    function toggleModoAuto() {
+      modoAutoActivo = !modoAutoActivo;
+      const btn = document.getElementById("modoAutoToggleBtn");
+      const txt = document.getElementById("modoAutoText");
+
+      if (modoAutoActivo) {
+        btn.classList.add("active");
+        txt.innerText = "Modo: Auto";
+        intentoAutoActivacion = false;
+        log("MODO: Activación automática por velocidad activada.");
+        locucion("Modo automático activado");
+      } else {
+        btn.classList.remove("active");
+        btn.classList.add("muted-active");
+        txt.innerText = "Modo: Manual";
+        log("MODO: Activación manual.");
+        locucion("Modo manual activado");
+      }
+    }
 
     function toggleTraficoVoz() {
       traficoVozActivo = !traficoVozActivo;
@@ -1298,7 +1322,7 @@
         ocultarAlertaVisual();
         gestionarEstadoHistorial(false);
 
-        document.getElementById("gpsStatus").innerText = "En espera (Auto >10km/h)";
+        document.getElementById("gpsStatus").innerText = modoAutoActivo ? "En espera (Modo Auto)" : "En espera (Modo Manual)";
         document.getElementById("gpsStatus").style.color = "#ff9100";
         document.getElementById("speedDisplay").innerText = "0";
         document.getElementById("headingDisplay").innerText = "--";
@@ -1483,7 +1507,7 @@
       if (esIncidencia) {
         card.classList.add("warning");
         sign.style.borderColor = "#ff9100";
-        document.getElementById("alertIcon").innerText = radar.icone || "⚠️️";
+        document.getElementById("alertIcon").innerText = radar.icone || "⚠️";
         document.getElementById("alertSpeedSign").innerText = "!";
         document.getElementById("alertTypeTitle").innerText = radar.tipo.toUpperCase();
         document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
@@ -1754,7 +1778,7 @@
             if (bannerTrafico && textoTrafico) {
               if (incidenciasWazeActivas.length > 0) {
                 bannerTrafico.className = "traffic-status-banner warning";
-                textoTrafico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
+                textoTrafico.innerText = `⚠️️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
                 bannerTrafico.children[0].innerText = "⚠️";
               } else {
                 bannerTrafico.className = "traffic-status-banner";
@@ -1787,9 +1811,6 @@
       }
     }
 
-    // Variable auxiliar para controlar la auto-activación por movimiento
-    let intentoAutoActivacion = false;
-
     function procesarGPS(pos) {
       document.getElementById("gpsStatus").innerText = "Activo";
       document.getElementById("gpsStatus").style.color = "#00e676";
@@ -1798,10 +1819,10 @@
       const lon = pos.coords.longitude;
       const vel = pos.coords.speed !== null ? Math.max(0, Math.round(pos.coords.speed * 3.6)) : 0;
 
-      // AUTO-ACTIVACIÓN: Si el sistema está en espera y superas los 10 km/h, se activa solo
-      if (watchId === null && vel >= 10 && !intentoAutoActivacion) {
+      // AUTO-ACTIVACIÓN: Solo si el modo Auto está activado y superas 10 km/h en espera
+      if (watchId === null && modoAutoActivo && vel >= 10 && !intentoAutoActivacion) {
         intentoAutoActivacion = true;
-        log("Movimiento detectado (>10 km/h). Auto-activando sistema...");
+        log("Movimiento >10km/h detectado (Modo Auto). Activando sistema...");
         toggleSistema();
         return;
       }
@@ -1931,7 +1952,7 @@
     function cerrarModalResumen() {
       document.getElementById("modalResumen").style.display = "none";
       rutaPendienteGuardar = null;
-      intentoAutoActivacion = false; // Permite auto-activarse en la siguiente ruta
+      intentoAutoActivacion = false;
     }
 
     function guardarRutaActual() {
@@ -2057,10 +2078,10 @@
       }
     }
 
-    // INICIO EN SEGUNDO PLANO EN ESPERA (MONITORIZANDO MOVIMIENTO)
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("mainBtn").addEventListener("click", toggleSistema);
       document.getElementById("fatigaToggleBtn").addEventListener("click", toggleFatiga);
+      document.getElementById("modoAutoToggleBtn").addEventListener("click", toggleModoAuto);
       document.getElementById("traficoVozToggleBtn").addEventListener("click", toggleTraficoVoz);
       
       document.getElementById("probarVozBtn").addEventListener("click", () => {
@@ -2078,15 +2099,15 @@
 
       actualizarBaseRadaresOficial(false);
 
-      // ARRANCAR GPS EN SEGUNDO PLANO PARA DETECTAR MOVIMIENTO AUTOMÁTICO (>10 KM/H)
+      // SENSOR GPS PASIVO PARA ACTIVACIÓN AUTOMÁTICA (>10 KM/H SI MODO AUTO ESTÁ ACTIVO)
       if (navigator.geolocation) {
-        log("Iniciando sensor GPS pasivo (esperando salida)...");
+        log("Iniciando sensor GPS pasivo...");
         navigator.geolocation.watchPosition(
           (pos) => {
             const vel = pos.coords.speed !== null ? Math.max(0, Math.round(pos.coords.speed * 3.6)) : 0;
-            if (watchId === null && vel >= 10 && !intentoAutoActivacion) {
+            if (watchId === null && modoAutoActivo && vel >= 10 && !intentoAutoActivacion) {
               intentoAutoActivacion = true;
-              log("¡Movimiento >10km/h detectado! Activando sistema...");
+              log("¡Movimiento >10km/h detectado (Modo Auto)! Activando sistema...");
               toggleSistema();
             }
           },
