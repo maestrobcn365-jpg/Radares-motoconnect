@@ -828,7 +828,7 @@
       {"id":"C31-CAST-03","tipo":"fijo","icone":"📷","velMax":80,"lat":41.2710,"lon":1.9810,"rumbo":235,"distanciaAviso":500},
       {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
       {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
-      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
+      {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
       {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
       {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
       {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
@@ -879,7 +879,7 @@
       {"id":"C32-MAT-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5450,"lon":2.4280,"rumbo":50,"distanciaAviso":650},
       {"id":"C32-AREN-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5820,"lon":2.5450,"rumbo":45,"distanciaAviso":650},
       {"id":"C32-CANET-03","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5980,"lon":2.5850,"rumbo":225,"distanciaAviso":650},
-      {"id":"C32-PINEDA-04","tipo":"tramo","icone":"⏱️️","velMax":100,"lat":41.6320,"lon":2.6780,"rumbo":225,"distanciaAviso":650},
+      {"id":"C32-PINEDA-04","tipo":"tramo","icone":"⏱️","velMax":100,"lat":41.6320,"lon":2.6780,"rumbo":225,"distanciaAviso":650},
       {"id":"C32-STA-SUS-05","tipo":"fijo","icone":"📷","velMax":100,"lat":41.6480,"lon":2.7150,"rumbo":50,"distanciaAviso":650},
       {"id":"N2-MONTG-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4720,"lon":2.2850,"rumbo":50,"distanciaAviso":350},
       {"id":"N2-PREM-02","tipo":"fijo","icone":"📷","velMax":50,"lat":41.4920,"lon":2.3580,"rumbo":230,"distanciaAviso":350},
@@ -1338,15 +1338,12 @@
     function locucion(texto) {
       if (!('speechSynthesis' in window)) return;
 
-      // 1. Forzar apertura de canal multimedia A2DP del casco mediante el elemento de audio real
       forzarCanalBluetooth();
 
-      // 2. Mantener vivo el hilo secundario
       if (audioSilencioso && audioSilencioso.paused) {
         audioSilencioso.play().catch(() => {});
       }
 
-      // 3. Ejecutar la voz con reanudación forzada para evitar el modo reposo de Android
       setTimeout(() => {
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
@@ -1577,7 +1574,7 @@
 
     function traducirCodigoClima(code, esNoche = false) {
       if (code === 0) return esNoche ? "🌙" : "☀️";
-      if (code === 1 || code === 2) return esNoche ? "☁️️" : "⛅";
+      if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
       if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
@@ -1825,7 +1822,8 @@
       }
 
       const ahora = Date.now();
-      if (ahora - ultimoPuntoGrabadoMs > 8000 && vel > 5) {
+      // MODIFICACIÓN GPX: Guardado fluido de puntos cada 4 segundos y a partir de 2 km/h
+      if (ahora - ultimoPuntoGrabadoMs > 4000 && vel > 2) {
         ultimoPuntoGrabadoMs = ahora;
         rutaEnCurso.puntos.push({ lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)), vel, time: ahora });
       }
