@@ -297,21 +297,21 @@
     .controls-row {
       display: flex;
       justify-content: center;
-      gap: 5px;
+      gap: 4px;
       margin: 2px 0;
     }
     .toggle-pill {
       background: rgba(30, 35, 42, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 20px;
-      padding: 4px 7px;
-      font-size: 0.58rem;
+      padding: 4px 6px;
+      font-size: 0.56rem;
       font-weight: 700;
       color: #8c9ba5;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       transition: all 0.25s ease;
       letter-spacing: 0.2px;
       user-select: none;
@@ -590,7 +590,7 @@
 </head>
 <body>
 
-  <!-- ELEMENTO MULTIMEDIA PARA ABRIR CANAL BLUETOOTH CON PANTALLA BLOQUEADA -->
+  <!-- ELEMENTO MULTIMEDIA PARA FORZAR CANAL BLUETOOTH Y SALTAR SOBRE ROADSYSNC -->
   <audio id="audioBeepAviso" preload="auto" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LFciUFLI7L8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMj"></audio>
 
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
@@ -763,7 +763,7 @@
       const audioTag = document.getElementById("audioBeepAviso");
       if (audioTag) {
         audioTag.currentTime = 0;
-        audioTag.volume = 0.9;
+        audioTag.volume = 0.95; // Volumen alto para priorizar canal multimedia frente a RoadSync
         audioTag.play().catch(() => {});
       }
     }
@@ -868,7 +868,7 @@
       {"id":"C16-BERGA-05","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0890,"lon":1.8510,"rumbo":355,"distanciaAviso":650},
       {"id":"C16-BAG-06","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2450,"lon":1.8680,"rumbo":18,"distanciaAviso":650},
       {"id":"C16-CADI-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.2980,"lon":1.8350,"rumbo":10,"distanciaAviso":650},
-      {"id":"C16-CADI-TR2","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.3420,"lon":1.8210,"rumbo":190,"distanciaAviso":650},
+      {"id":"C16-CADI-TR2","tipo":"tramo","icone":"⏱️️","velMax":80,"lat":42.3420,"lon":1.8210,"rumbo":190,"distanciaAviso":650},
       {"id":"C33-MOLLET-01","tipo":"fijo","icone":"📷","velMax":120,"lat":41.5220,"lon":2.1980,"rumbo":40,"distanciaAviso":650},
       {"id":"C33-MONTC-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4780,"lon":2.1850,"rumbo":215,"distanciaAviso":500},
       {"id":"C60-ARGENT-01","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.5720,"lon":2.3950,"rumbo":320,"distanciaAviso":650},
@@ -965,7 +965,7 @@
       {"id":"C25-AVINYO-10","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8520,"lon":2.0550,"rumbo":80,"distanciaAviso":650},
       {"id":"C25-STA-EUL-11","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8950,"lon":2.1480,"rumbo":260,"distanciaAviso":650},
       {"id":"C25-GURB-12","tipo":"fijo","icone":"📷","velMax":100,"lat":41.9510,"lon":2.2150,"rumbo":260,"distanciaAviso":650},
-      {"id":"C25-SANTSAD-13","tipo":"tramo","icone":"⏱️","velMax":100,"lat":41.8750,"lon":2.4280,"rumbo":90,"distanciaAviso":650},
+      {"id":"C25-SANTSAD-13","tipo":"tramo","icone":"⏱️️","velMax":100,"lat":41.8750,"lon":2.4280,"rumbo":90,"distanciaAviso":650},
       {"id":"C25-SANTHIL-14","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8620,"lon":2.5450,"rumbo":270,"distanciaAviso":650},
       {"id":"C25-ARB-15","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8580,"lon":2.6150,"rumbo":90,"distanciaAviso":650},
       {"id":"C25-SANTACOL-16","tipo":"fijo","icone":"📷","velMax":100,"lat":41.8550,"lon":2.6880,"rumbo":85,"distanciaAviso":650},
@@ -1002,7 +1002,7 @@
       {"id":"LL12-LLEIDA-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.5950,"lon":0.6280,"rumbo":185,"distanciaAviso":650},
       {"id":"C14-SALOU-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.0950,"lon":1.1350,"rumbo":345,"distanciaAviso":500},
       {"id":"C14-REUS-02","tipo":"fijo","icone":"📷","velMax":100,"lat":41.1780,"lon":1.1250,"rumbo":335,"distanciaAviso":650},
-      {"id":"C14-ALCOVER-03","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2580,"lon":1.1820,"rumbo":155,"distanciaAviso":650},
+      {"id":"C14-ALCOVER-03","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2580,"lon":1.1820,"rumbo":155,"distanciaAviso":650},
       {"id":"C14-MONTBL-04","tipo":"fijo","icone":"📷","velMax":90,"lat":41.3850,"lon":1.1710,"rumbo":340,"distanciaAviso":650},
       {"id":"C14-SOLIVE-05","tipo":"fijo","icone":"📷","velMax":90,"lat":41.4550,"lon":1.2050,"rumbo":160,"distanciaAviso":650},
       {"id":"C14-TARREGA-06","tipo":"fijo","icone":"📷","velMax":90,"lat":41.6320,"lon":1.1350,"rumbo":160,"distanciaAviso":650},
@@ -1171,7 +1171,7 @@
     let ultimoAvisoHielo = 0;
     let fatigaActiva = false;
     let traficoVozActivo = true;
-    let modoAutoActivo = true; // Selector Auto / Manual (Por defecto en Auto)
+    let modoAutoActivo = true;
     let intentoAutoActivacion = false;
 
     let tiempoConduciendoMs = 0;
@@ -1778,7 +1778,7 @@
             if (bannerTrafico && textoTrafico) {
               if (incidenciasWazeActivas.length > 0) {
                 bannerTrafico.className = "traffic-status-banner warning";
-                textoTrafico.innerText = `⚠️️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
+                textoTrafico.innerText = `⚠️ Incidencia / Retención cercana (${incidenciasWazeActivas.length})`;
                 bannerTrafico.children[0].innerText = "⚠️";
               } else {
                 bannerTrafico.className = "traffic-status-banner";
@@ -1819,10 +1819,9 @@
       const lon = pos.coords.longitude;
       const vel = pos.coords.speed !== null ? Math.max(0, Math.round(pos.coords.speed * 3.6)) : 0;
 
-      // AUTO-ACTIVACIÓN: Solo si el modo Auto está activado y superas 10 km/h en espera
       if (watchId === null && modoAutoActivo && vel >= 10 && !intentoAutoActivacion) {
         intentoAutoActivacion = true;
-        log("Movimiento >10km/h detectado (Modo Auto). Activando sistema...");
+        log("¡Movimiento >10km/h detectado (Modo Auto)! Activando sistema...");
         toggleSistema();
         return;
       }
@@ -2099,7 +2098,6 @@
 
       actualizarBaseRadaresOficial(false);
 
-      // SENSOR GPS PASIVO PARA ACTIVACIÓN AUTOMÁTICA (>10 KM/H SI MODO AUTO ESTÁ ACTIVO)
       if (navigator.geolocation) {
         log("Iniciando sensor GPS pasivo...");
         navigator.geolocation.watchPosition(
