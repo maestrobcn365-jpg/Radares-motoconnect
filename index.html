@@ -590,7 +590,7 @@
 </head>
 <body>
 
-  <!-- ELEMENTO MULTIMEDIA PARA FORZAR CANAL BLUETOOTH Y SALTAR SOBRE ROADSYSNC -->
+  <!-- ELEMENTO MULTIMEDIA PARA FORZAR BLUETOOTH -->
   <audio id="audioBeepAviso" preload="auto" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LFciUFLI7L8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMj"></audio>
 
   <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
@@ -613,7 +613,7 @@
       </svg>
       <div class="header-text">
         <h1>AVISADOR <span>RADARES</span></h1>
-        <div class="subhead">Audio BT • X10 / CAR-KIT</div>
+        <div class="subhead">Audio BT • Waze Dinámico</div>
       </div>
     </div>
     <div class="header-actions">
@@ -706,7 +706,7 @@
         <span id="dbStatus" style="color: #00e676; font-weight: 600;">Cargando...</span>
       </div>
 
-      <div class="log-box" id="logBox">> Base lista. Elige modo Auto o Manual.</div>
+      <div class="log-box" id="logBox">> Waze dinámico activo. Listo en ruta.</div>
     </div>
 
   </div>
@@ -763,7 +763,7 @@
       const audioTag = document.getElementById("audioBeepAviso");
       if (audioTag) {
         audioTag.currentTime = 0;
-        audioTag.volume = 0.95; // Volumen alto para priorizar canal multimedia frente a RoadSync
+        audioTag.volume = 0.95;
         audioTag.play().catch(() => {});
       }
     }
@@ -830,7 +830,7 @@
       {"id":"C245-GAVA-01","tipo":"fijo","icone":"📷","velMax":50,"lat":41.3060,"lon":2.0080,"rumbo":240,"distanciaAviso":350},
       {"id":"C32-CAST-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2720,"lon":1.9920,"rumbo":65,"distanciaAviso":650},
       {"id":"C32-SIT-TR1","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2480,"lon":1.8420,"rumbo":240,"distanciaAviso":650},
-      {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
+      {"id":"C32-SIT-TR2","tipo":"tramo","icone":"⏱️️","velMax":90,"lat":41.2390,"lon":1.8010,"rumbo":60,"distanciaAviso":650},
       {"id":"C32-VILAN-01","tipo":"fijo","icone":"📷","velMax":100,"lat":41.2290,"lon":1.7450,"rumbo":60,"distanciaAviso":650},
       {"id":"B23-STFEL-01","tipo":"fijo","icone":"📷","velMax":80,"lat":41.3780,"lon":2.0520,"rumbo":250,"distanciaAviso":500},
       {"id":"B23-MOLINS-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4080,"lon":2.0150,"rumbo":70,"distanciaAviso":500},
@@ -868,7 +868,7 @@
       {"id":"C16-BERGA-05","tipo":"fijo","icone":"📷","velMax":90,"lat":42.0890,"lon":1.8510,"rumbo":355,"distanciaAviso":650},
       {"id":"C16-BAG-06","tipo":"fijo","icone":"📷","velMax":90,"lat":42.2450,"lon":1.8680,"rumbo":18,"distanciaAviso":650},
       {"id":"C16-CADI-TR1","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.2980,"lon":1.8350,"rumbo":10,"distanciaAviso":650},
-      {"id":"C16-CADI-TR2","tipo":"tramo","icone":"⏱️️","velMax":80,"lat":42.3420,"lon":1.8210,"rumbo":190,"distanciaAviso":650},
+      {"id":"C16-CADI-TR2","tipo":"tramo","icone":"⏱️","velMax":80,"lat":42.3420,"lon":1.8210,"rumbo":190,"distanciaAviso":650},
       {"id":"C33-MOLLET-01","tipo":"fijo","icone":"📷","velMax":120,"lat":41.5220,"lon":2.1980,"rumbo":40,"distanciaAviso":650},
       {"id":"C33-MONTC-02","tipo":"fijo","icone":"📷","velMax":80,"lat":41.4780,"lon":2.1850,"rumbo":215,"distanciaAviso":500},
       {"id":"C60-ARGENT-01","tipo":"tramo","icone":"⏱️","velMax":90,"lat":41.5720,"lon":2.3950,"rumbo":320,"distanciaAviso":650},
@@ -1147,6 +1147,7 @@
 
     let watchId = null;
     let wakeLock = null;
+    let timerWazeDinamico = null; // Temporizador para actualización continua de Waze
     const avisosPorVoz = {};
 
     const TOLERANCIA_RUMBO = 35;
@@ -1745,14 +1746,18 @@
       } catch (e) {}
     }
 
-    async function consultarAlertasWaze(lat, lon, forzar = false) {
+    // WAZE DINÁMICO: Sincronización continua optimizada por velocidad
+    async function consultarAlertasWaze(lat, lon, forzar = false, velActual = 0) {
       if (!URL_PROXY_WAZE) return;
 
       const ahora = Date.now();
-      if (!forzar && (ahora - ultimaActualizacionWaze < 45000)) return;
+      // Si vas rápido (>60 km/h), actualiza Waze cada 20 segundos; si vas lento o parado, cada 45 segundos
+      const intervaloRequerido = velActual > 60 ? 20000 : 45000;
+
+      if (!forzar && (ahora - ultimaActualizacionWaze < intervaloRequerido)) return;
       ultimaActualizacionWaze = ahora;
 
-      log("Waze: Sincronizando alertas en tiempo real...");
+      log("Waze: Sincronización continua de alertas...");
 
       try {
         const controller = new AbortController();
@@ -1763,9 +1768,12 @@
         if (res.ok) {
           const alertas = await res.json();
           if (Array.isArray(alertas)) {
+            // Radio de aviso dinámico según velocidad (más lejos si vas rápido)
+            const radioWaze = velActual > 80 ? 900 : 650;
+
             radaresWazeActivos = alertas
               .filter(a => !a.tipo || !['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
-              .map(a => ({ ...a, distanciaAviso: 650 }));
+              .map(a => ({ ...a, distanciaAviso: radioWaze }));
 
             incidenciasWazeActivas = alertas
               .filter(a => a.tipo && ['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
@@ -1789,14 +1797,12 @@
 
             const totalWaze = radaresWazeActivos.length + incidenciasWazeActivas.length;
             if (totalWaze > 0) {
-              log(`Waze: Conectado (${radaresWazeActivos.length} móviles / ${incidenciasWazeActivas.length} incidencias cerca).`);
-            } else {
-              log(`Waze: Conectado (0 móviles en tu zona).`);
+              log(`Waze: Actualizado (${radaresWazeActivos.length} móviles / ${incidenciasWazeActivas.length} incidencias).`);
             }
           }
         }
       } catch (e) {
-        log("Waze: Error de red o tiempo de espera.");
+        log("Waze: Error de red temporal.");
       }
     }
 
@@ -1879,7 +1885,8 @@
         spdEl.classList.remove("danger");
       }
 
-      consultarAlertasWaze(lat, lon);
+      // Llamada dinámica a Waze pasando la velocidad actual para ajustar el intervalo
+      consultarAlertasWaze(lat, lon, false, vel);
 
       let alertaActiva = null;
       let distanciaMinima = Infinity;
