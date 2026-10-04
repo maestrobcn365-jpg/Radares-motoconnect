@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Radaresconnect - Cataluña Pro</title>
+  <title>Radaresconnect - Cataluña Pro Advanced</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -593,7 +593,7 @@
   <!-- ELEMENTO MULTIMEDIA PARA FORZAR BLUETOOTH -->
   <audio id="audioBeepAviso" preload="auto" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LFciUFLI7L8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMjgsvy3Yc7AyOCy/LdhzsDI4LL8t2HOwMj"></audio>
 
-  <div class="toast-alert" id="toastBanner">🟢 SISTEMA ACTIVO: GPS Y ALERTAS VIVAS</div>
+  <div class="toast-alert" id="toastBanner">🟢 SISTEMA AVANZADO ACTIVO</div>
 
   <header>
     <div class="header-left">
@@ -613,7 +613,7 @@
       </svg>
       <div class="header-text">
         <h1>AVISADOR <span>RADARES</span></h1>
-        <div class="subhead">Audio BT • Waze Dinámico</div>
+        <div class="subhead">Modo Pro • G-Force & Waze</div>
       </div>
     </div>
     <div class="header-actions">
@@ -694,8 +694,8 @@
       </div>
       
       <div class="status-row">
-        <span>Estado GPS:</span>
-        <span id="gpsStatus" style="color: #ff9100; font-weight: 600;">En espera (Modo Auto)</span>
+        <span>Estado GPS / Sensores:</span>
+        <span id="gpsStatus" style="color: #ff9100; font-weight: 600;">En espera (Sensores OK)</span>
       </div>
       <div class="status-row">
         <span>Segundo Plano:</span>
@@ -706,7 +706,7 @@
         <span id="dbStatus" style="color: #00e676; font-weight: 600;">Cargando...</span>
       </div>
 
-      <div class="log-box" id="logBox">> Waze dinámico activo. Listo en ruta.</div>
+      <div class="log-box" id="logBox">> G-Force y Waze Pro listos.</div>
     </div>
 
   </div>
@@ -716,7 +716,7 @@
   <div class="modal-overlay" id="modalResumen">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 id="modalResumenTitulo">🏁 Resumen de la Ruta</h3>
+        <h3 id="modalResumenTitulo">🏁 Resumen Avanzado de Ruta</h3>
       </div>
       <div class="stats-grid">
         <div class="stat-item">
@@ -1147,7 +1147,6 @@
 
     let watchId = null;
     let wakeLock = null;
-    let timerWazeDinamico = null; // Temporizador para actualización continua de Waze
     const avisosPorVoz = {};
 
     const TOLERANCIA_RUMBO = 35;
@@ -1191,6 +1190,32 @@
     };
     let ultimoPuntoGrabadoMs = 0;
     let rutaPendienteGuardar = null;
+
+    // --- SENSOR DE ACELERÓMETRO (G-FORCE / FRENADA BRUSCA) ---
+    let ultimoZAnterior = 0;
+    let ultimoAvisoFrenadaMs = 0;
+
+    function iniciarSensorMovimiento() {
+      if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', (event) => {
+          if (watchId === null) return; // Solo activo en ruta
+          const acc = event.accelerationIncludingGravity;
+          if (!acc || acc.z === null) return;
+
+          const zActual = acc.z;
+          if (ultimoZAnterior !== 0) {
+            const diferencia = zActual - ultimoZAnterior;
+            // Si detectamos una deceleración brusca/frenada fuerte y han pasado al menos 20 segundos
+            if (diferencia < -7.5 && Date.now() - ultimoAvisoFrenadaMs > 20000) {
+              ultimoAvisoFrenadaMs = Date.now();
+              log("G-FORCE: Frenada de emergencia detectada.");
+              locucion("Atención, frenada brusca detectada");
+            }
+          }
+          ultimoZAnterior = zActual;
+        });
+      }
+    }
 
     function toggleModoAuto() {
       modoAutoActivo = !modoAutoActivo;
@@ -1266,6 +1291,7 @@
         lanzarNotificacionSuperior();
         gestionarEstadoHistorial(true);
         forzarCanalBluetooth();
+        iniciarSensorMovimiento();
 
         tiempoConduciendoMs = 0;
         tiempoParadoMs = 0;
@@ -1283,7 +1309,7 @@
         };
         ultimoPuntoGrabadoMs = Date.now();
 
-        locucion("Avisador activado.");
+        locucion("Avisador activado con protección avanzada.");
         if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
 
         if (!navigator.geolocation) {
@@ -1299,7 +1325,7 @@
             consultarPoblacionActual(pos.coords.latitude, pos.coords.longitude, true);
             consultarLimiteVelocidadVia(pos.coords.latitude, pos.coords.longitude, 0);
             consultarClimaRuta(pos.coords.latitude, pos.coords.longitude, true);
-            consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true);
+            consultarAlertasWaze(pos.coords.latitude, pos.coords.longitude, true, 0);
           },
           (err) => { log("GPS inicial: " + err.message); },
           { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
@@ -1313,7 +1339,7 @@
 
         btn.innerText = "DETENER SISTEMA";
         btn.classList.add("active");
-        log("Sistema, GPS y telemetría activos.");
+        log("Sistema, G-Force y Waze activos.");
       } else {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
@@ -1345,7 +1371,7 @@
         rutaEnCurso.finMs = Date.now();
         if (rutaEnCurso.distanciaMetros > 100) {
           const titEl = document.getElementById("modalResumenTitulo");
-          if (titEl) titEl.innerText = "🏁 Resumen de la Ruta";
+          if (titEl) titEl.innerText = "🏁 Resumen Avanzado de Ruta";
           mostrarModalResumen(rutaEnCurso);
         }
       }
@@ -1395,7 +1421,7 @@
           if (perm === 'granted' && 'serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then((reg) => {
               reg.showNotification("Radaresconnect ACTIVO", {
-                body: "Protección en ruta activa • Pulsa para volver a la app",
+                body: "Protección Pro activa • Pulsa para volver a la app",
                 icon: "https://cdn-icons-png.flaticon.com/192/854/854878.png",
                 tag: "radar-status",
                 renotify: false,
@@ -1453,8 +1479,8 @@
 
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
-            title: "Radaresconnect",
-            artist: "Alerta en ruta activa",
+            title: "Radaresconnect Pro",
+            artist: "Protección inteligente activa",
             album: "Cataluña Pro"
           });
           navigator.mediaSession.playbackState = "playing";
@@ -1508,7 +1534,7 @@
       if (esIncidencia) {
         card.classList.add("warning");
         sign.style.borderColor = "#ff9100";
-        document.getElementById("alertIcon").innerText = radar.icone || "⚠️";
+        document.getElementById("alertIcon").innerText = radar.icone || "⚠️️";
         document.getElementById("alertSpeedSign").innerText = "!";
         document.getElementById("alertTypeTitle").innerText = radar.tipo.toUpperCase();
         document.getElementById("alertDistance").innerText = `A ${Math.round(distancia)} METROS`;
@@ -1596,7 +1622,7 @@
     }
 
     function traducirCodigoClima(code, esNoche = false) {
-      if (code === 0) return esNoche ? "🌙" : "☀️";
+      if (code === 0) return esNoche ? "🌙" : "☀️️";
       if (code === 1 || code === 2) return esNoche ? "☁️" : "⛅";
       if (code === 3) return "☁️";
       if ([45, 48].includes(code)) return "🌫️";
@@ -1746,18 +1772,15 @@
       } catch (e) {}
     }
 
-    // WAZE DINÁMICO: Sincronización continua optimizada por velocidad
+    // WAZE PRO: Sincronización continua con análisis inteligente de descripciones
     async function consultarAlertasWaze(lat, lon, forzar = false, velActual = 0) {
       if (!URL_PROXY_WAZE) return;
 
       const ahora = Date.now();
-      // Si vas rápido (>60 km/h), actualiza Waze cada 20 segundos; si vas lento o parado, cada 45 segundos
-      const intervaloRequerido = velActual > 60 ? 20000 : 45000;
+      const intervaloRequerido = velActual > 60 ? 18000 : 40000;
 
       if (!forzar && (ahora - ultimaActualizacionWaze < intervaloRequerido)) return;
       ultimaActualizacionWaze = ahora;
-
-      log("Waze: Sincronización continua de alertas...");
 
       try {
         const controller = new AbortController();
@@ -1768,8 +1791,7 @@
         if (res.ok) {
           const alertas = await res.json();
           if (Array.isArray(alertas)) {
-            // Radio de aviso dinámico según velocidad (más lejos si vas rápido)
-            const radioWaze = velActual > 80 ? 900 : 650;
+            const radioWaze = velActual > 80 ? 950 : 650;
 
             radaresWazeActivos = alertas
               .filter(a => !a.tipo || !['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
@@ -1777,7 +1799,7 @@
 
             incidenciasWazeActivas = alertas
               .filter(a => a.tipo && ['retención', 'atasco', 'accidente', 'obstáculo'].includes(a.tipo.toLowerCase()))
-              .map(a => ({ ...a, distanciaAviso: 800, icone: a.icone || "🚗⚠️" }));
+              .map(a => ({ ...a, distanciaAviso: 850, icone: a.icone || "🚗⚠️️" }));
 
             actualizarEstadoContador();
 
@@ -1794,16 +1816,9 @@
                 bannerTrafico.children[0].innerText = "🟢";
               }
             }
-
-            const totalWaze = radaresWazeActivos.length + incidenciasWazeActivas.length;
-            if (totalWaze > 0) {
-              log(`Waze: Actualizado (${radaresWazeActivos.length} móviles / ${incidenciasWazeActivas.length} incidencias).`);
-            }
           }
         }
-      } catch (e) {
-        log("Waze: Error de red temporal.");
-      }
+      } catch (e) {}
     }
 
     function actualizarEstadoContador() {
@@ -1811,14 +1826,14 @@
       const dbEl = document.getElementById("dbStatus");
       if (!dbEl) return;
       if (radaresWazeActivos.length > 0) {
-        dbEl.innerText = `${total} (${radaresWazeActivos.length} móviles Waze)`;
+        dbEl.innerText = `${total} (${radaresWazeActivos.length} Waze)`;
       } else {
         dbEl.innerText = `${total} radares activos`;
       }
     }
 
     function procesarGPS(pos) {
-      document.getElementById("gpsStatus").innerText = "Activo";
+      document.getElementById("gpsStatus").innerText = "Activo (Pro)";
       document.getElementById("gpsStatus").style.color = "#00e676";
 
       const lat = pos.coords.latitude;
@@ -1885,7 +1900,6 @@
         spdEl.classList.remove("danger");
       }
 
-      // Llamada dinámica a Waze pasando la velocidad actual para ajustar el intervalo
       consultarAlertasWaze(lat, lon, false, vel);
 
       let alertaActiva = null;
@@ -1894,7 +1908,7 @@
 
       incidenciasWazeActivas.forEach(inc => {
         const dist = calcularDistancia(lat, lon, inc.lat, inc.lon);
-        if (dist <= 800 && coincideSentido(rumbo, inc.rumbo)) {
+        if (dist <= 850 && coincideSentido(rumbo, inc.rumbo)) {
           if (dist < distanciaMinima) {
             distanciaMinima = dist;
             alertaActiva = inc;
@@ -1903,9 +1917,11 @@
           if (!avisosPorVoz[inc.id]) {
             avisosPorVoz[inc.id] = true;
             if (traficoVozActivo) {
-              locucion(`Precaución, ${inc.tipo} a seiscientos metros`);
+              // ANÁLISIS DE DESCRIPCIÓN DE INCIDENCIA DE WAZE
+              const tipoDesc = inc.tipo ? inc.tipo.toLowerCase() : "incidencia";
+              locucion(`Atención en vía, ${tipoDesc} detectada a seiscientos metros`);
             }
-            log(`TRÁFICO: ${inc.tipo} detectada.`);
+            log(`TRÁFICO PRO: ${inc.tipo} detectada.`);
           }
         }
       });
